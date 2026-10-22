@@ -12,6 +12,8 @@ After Loss Desk is an **Alexa+ add-on** (an MCP server, spec 2025-11-25, Streama
 
 Built for **Build, Ship, Shape: Amazon Developer Hackathon 2026**, Alexa+ track, by Asish Kumar and Akash Kumar. MIT.
 
+![Demo: start a case, allow routine notices, order certified copies through checkout, a week passes, three gates, progress](docs/demo.gif)
+
 - **Try it:** `uv run afterloss serve` → http://127.0.0.1:8300 (the page is a real MCP client standing in for Alexa+, labelled as such). MCP endpoint: `/mcp`. Agent Skill: [SKILL.md](SKILL.md). MCP App card: `ui://afterloss/card.html`.
 - **The measured claim:** `uv run afterloss simulate --weeks 8` (below). **The pitch:** [docs/PITCH.md](docs/PITCH.md). **Against the rubric:** [docs/JUDGING.md](docs/JUDGING.md). **Policy mapping:** [docs/POLICY.md](docs/POLICY.md). **Friction log:** [docs/FRICTION.md](docs/FRICTION.md).
 
