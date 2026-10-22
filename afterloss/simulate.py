@@ -90,7 +90,7 @@ def policy_check() -> int:
     os.environ.setdefault("AFTERLOSS_DB", str(ROOT / "data" / "simulation.sqlite3"))
     case = demo_case()
     bad = 0
-    strings = [speak.ledger_summary({**case, "tasks": [{**t, "deadline_days_left": 23} for t in case["tasks"]]}, ledger.originals_needed(case)),
+    strings = [speak.ledger_summary(case, ledger.originals_needed(case)),
                speak.due_summary(case, ledger.due(case, horizon_days=30), governor.open_decisions(case)), speak.quote_summary(7, 195.95), policy.CRISIS_LINE]
     for d in case["decisions"]:
         strings.append(speak.decision_prompt(d, case["tasks"][0]))

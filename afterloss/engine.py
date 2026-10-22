@@ -33,10 +33,12 @@ def _summary_for(task: dict[str, Any], gate: str) -> tuple[str, str]:
     sp = task["spoken"]
     if gate == "D1":
         return (f"Money needs to go out for {sp}.", f"{task['title']}. {task['history'][-1]['text'] if task['history'] else ''}".strip())
+    if gate == "D2" and task["rule"] == "will_deliver":
+        return (f"The original will has to leave your hands: {sp}.", f"{task['title']}, in person, within the statutory 30 days. Keep the clerk's stamped receipt. {task['source']['quote']}")
     if gate == "D2":
         return (f"A certified original has to leave your hands for {sp}.", f"{task['title']}. Send one certified original by tracked mail; keep the tracking number on the card.")
     if gate == "D3":
-        return (f"Your signature or a visit is needed for {sp}.", f"{task['title']}. {task['history'][-1]['text'] if task['history'] else drafts.draft({'relationship': 'executor', 'date_of_death': ''}, task)['text'][:200]}".strip())
+        return (f"Your signature or a visit is needed for {sp}.", f"{task['title']}. {task['history'][-1]['text'] if task['history'] else drafts.phone_script(task)[:220]}".strip())
     if gate == "D4":
         return (f"Something that cannot be undone is next for {sp}.", f"{task['title']}. {task['history'][-1]['text'] if task['history'] else ''}".strip())
     if gate == "D5":
@@ -95,9 +97,10 @@ def tick(case: dict[str, Any]) -> dict[str, Any]:
             continue
         if t["rule"] == "certificates_order":
             continue  # bought through checkout, never auto-executed
-        if t["action"] == "send_original" and case.get("originals_on_hand", 0) == 0 and not any(d["task_id"] == t["id"] and d["gate"] == "D2" and d["status"] == "raised" for d in case["decisions"]):
-            # cannot send what we do not have; the quote will include it
-            pass
+        if governor.GATES.get(t["action"]) and t["deadline"] and not t.get("pending_step") and not t["history"]:
+            # a gated task with a date is raised when its date is near, not on day one: fewer interruptions, none missed
+            if (date.fromisoformat(t["deadline"]) - today).days > HORIZON_DAYS:
+                continue
         execute(case, t)
     return {"replies": [t["id"] for t in changed], "open_decisions": governor.open_decisions(case)}
 

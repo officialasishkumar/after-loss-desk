@@ -12,8 +12,11 @@ def _n(n: int, one: str, many: str) -> str:
 
 
 def ledger_summary(case: dict[str, Any], originals: int) -> str:
+    from datetime import date
     open_tasks = [t for t in case["tasks"] if t["status"] not in ("done", "cancelled")]
-    statutory = [t for t in open_tasks if t["deadline_kind"] == "statutory"]
+    statutory = [t for t in open_tasks if t["deadline_kind"] == "statutory" and t["deadline"]]
+    for t in statutory:
+        t["deadline_days_left"] = max((date.fromisoformat(t["deadline"]) - date.fromisoformat(case["today"])).days, 0)
     s = (f"I have made the list: {_n(len(open_tasks), 'thing', 'things')} to tell or do, over the next few months. "
          f"You will need about {_n(originals, 'certified copy', 'certified copies')} of the certificate. ")
     if statutory:

@@ -81,8 +81,6 @@ def test_checkout_quote_session_and_idempotent_completion():
 
 def test_voice_strings_carry_no_private_data():
     case = demo_case()
-    for t in case["tasks"]:
-        t["deadline_days_left"] = 23
     strings = [speak.ledger_summary(case, ledger.originals_needed(case)), speak.due_summary(case, ledger.due(case, horizon_days=30), governor.open_decisions(case)),
                speak.quote_summary(7, 195.95), policy.CRISIS_LINE] + [speak.decision_prompt(d, case["tasks"][0]) for d in case["decisions"]]
     for s in strings:

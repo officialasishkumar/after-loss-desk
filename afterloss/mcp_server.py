@@ -24,6 +24,7 @@ mcp = FastMCP("after-loss-desk", instructions="Helps an executor settle a loved 
 
 Relationship = Literal["spouse", "child", "sibling", "parent", "friend", "other"]
 Kind = Literal["bank", "pension", "employer", "insurance", "utilities", "phone_internet", "subscriptions", "credit_cards", "vehicle"]
+State = Literal["CA"]
 Reason = Literal["i_will_do_it_myself", "not_now", "wrong_institution", "ask_my_sibling"]
 ReplyKind = Literal["done", "needs_original", "needs_signature", "final_bill", "silence", "ready_to_close", "election"]
 
@@ -36,14 +37,11 @@ def _case(case_id: str) -> dict[str, Any]:
 
 
 @mcp.tool(name="start_case", title="Start a case", meta=UI)
-def start_case(date_of_death: str, relationship: Relationship, has_will: bool, account_kinds: list[Kind], state: str = "CA") -> dict[str, Any]:
+def start_case(date_of_death: str, relationship: Relationship, has_will: bool, account_kinds: list[Kind], state: State = "CA") -> dict[str, Any]:
     """Start settling someone's affairs. Needs only: the date of death, your relationship, whether there is a will, and which
     kinds of accounts exist. No names, no account numbers: those go on the web client, never by voice."""
     case = engine.start(date_of_death=date_of_death, state=state, relationship=relationship, has_will=has_will, account_kinds=list(account_kinds))
     card = engine.ledger_card(case)
-    stat = next((t for t in case["tasks"] if t["deadline_kind"] == "statutory" and t["status"] not in ("done",)), None)
-    if stat:
-        stat["deadline_days_left"] = card["rows"][[r["id"] for r in card["rows"]].index(stat["id"])]["days_left"] or 0
     return {"case_id": case["id"], "speak": speak.ledger_summary(case, card["originals_needed"]) + " " + policy.CRISIS_LINE, "card": card,
             "web": f"{PUBLIC_URL}/?case={case['id']}"}
 
