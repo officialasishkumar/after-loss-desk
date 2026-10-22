@@ -108,3 +108,13 @@ def test_eight_week_simulation_meets_the_measured_claim(capsys):
     out = capsys.readouterr().out
     assert "decision recall           1.0" in out.replace("  ", " ").replace("recall  ", "recall ") or "decision recall" in out
     assert "forbidden actions" in out
+
+
+def test_approving_the_certificates_gate_by_voice_orders_them():
+    case = demo_case()
+    checkout.create_session(case)
+    d = next(x for x in governor.open_decisions(case) if x["task_id"] == "certificates_order")
+    engine.approve(case, d["id"])
+    assert case["checkout_sessions"][0]["status"] == "completed" and case.get("originals_ordered", 0) >= 4
+    engine.advance(case, 6)
+    assert case["originals_on_hand"] == case["originals_ordered"] and not governor.forbidden_actions(case)

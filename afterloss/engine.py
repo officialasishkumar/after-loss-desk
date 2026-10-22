@@ -127,6 +127,11 @@ def approve(case: dict[str, Any], decision_id: str) -> dict[str, Any] | None:
         tick(case)
     elif d["gate"] == "D5":
         task["status"] = "held"
+    elif task["rule"] == "certificates_order":
+        # approved by voice rather than on the checkout card: complete the open session (or open one) so the copies are ordered
+        from . import checkout
+        session = next((x for x in case["checkout_sessions"] if x["status"] != "completed"), None) or checkout.create_session(case)
+        checkout.complete_session(case, session["id"])
     else:
         task["status"] = "open"
         _do(case, task, d["action"])

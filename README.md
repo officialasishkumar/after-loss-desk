@@ -61,7 +61,7 @@ A confirm-everything agent would have asked 27 times. After Loss Desk asked 15, 
 ```bash
 uv sync
 uv run afterloss serve            # web client + MCP endpoint + checkout endpoints on :8300 (PORT to change)
-uv run pytest                     # 17 tests: ledger, governor, checkout idempotency, voice policy, web endpoints, a real MCP client over Streamable HTTP, the simulation
+uv run pytest                     # 18 tests: ledger, governor, checkout idempotency, voice policy, web endpoints, a real MCP client over Streamable HTTP, the simulation
 uv run afterloss simulate --weeks 8
 uv run afterloss policy-check
 ```
