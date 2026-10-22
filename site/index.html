@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>After Loss Desk</title><meta name="description" content="A simulated Alexa+ add-on for the months after a death in the family: the executor's ledger, drafted notices, certified copies through checkout, and five gates.">
+<link rel="stylesheet" href="/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23203a60%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%277%27 fill=%27none%27 stroke=%27white%27 stroke-width=%273%27/%3E%3C/svg%3E">
+</head><body>
+<header class="bar"><span class="brand">After Loss Desk</span><span class="sim" title="This web page is a real MCP client (initialize, tools/list, tools/call over Streamable HTTP). It is not Amazon's Alexa+.">Simulated Alexa+ add-on</span>
+<span class="clock">Today <b id="today">–</b> <button id="next-day" class="small" title="Advance the case one day: replies arrive, routine notices go out">Next day</button><button id="next-week" class="small">+7</button></span></header>
+<main class="layout">
+  <section class="echo" aria-label="Echo Show">
+    <div class="screen"><div id="card" class="card"><h1>After Loss Desk</h1><p class="muted">Say what happened, or press start.</p></div></div>
+    <div class="speak" id="speak" aria-live="polite"></div>
+    <form id="ask" class="ask" autocomplete="off"><input id="utterance" placeholder="Talk to the desk: “what do I still need to do?”" aria-label="Say something">
+      <button type="submit">Say</button><button type="button" id="mute" class="alt" title="Toggle spoken replies (browser speech)">🔊</button></form>
+    <div class="chips" id="chips">
+      <button type="button" data-say="My husband died last week. There is a will. He had a bank account, a pension, life insurance, the power bill, a gym and a car.">Start a case</button>
+      <button type="button" data-say="What do I still need to do?">What's due</button>
+      <button type="button" data-say="Order the certificates">Order the copies</button>
+      <button type="button" data-say="Approve">Approve</button>
+      <button type="button" data-say="Decline">Decline</button>
+      <button type="button" data-say="Read me the bank letter">Read the bank letter</button>
+      <button type="button" data-say="How far along are we?">Progress</button>
+    </div>
+  </section>
+  <aside class="desk">
+    <details open><summary>What the add-on sent and received</summary><ol id="log" class="log"></ol></details>
+    <details><summary>Institutions (typed here, never spoken)</summary><div id="labels" class="labels"></div></details>
+    <details><summary>Receipts (hash-chained)</summary><p class="muted small" id="chain"></p><ol id="receipts" class="receipts"></ol></details>
+    <details><summary>Side door for the demo</summary><p class="small muted">Things the real world would do by letter or by a sibling.</p>
+      <button type="button" class="small" id="objection">Brother objects to selling the car</button>
+      <button type="button" class="small" id="letter-bank">A letter came: the bank wants an original</button>
+      <button type="button" class="small" id="share">Open the sibling's read-only page</button></details>
+    <p class="fine">MCP endpoint <code>/mcp</code> (spec 2025-11-25, Streamable HTTP, stateless). Checkout endpoints <code>/checkout-sessions</code>. Alexa+ itself is in preview for select partners, so this page stands in for it: it speaks the <code>speak</code> field and renders the <code>card</code> field of each tool result. No names or account numbers are ever spoken; see <a href="https://github.com/officialasishkumar/after-loss-desk#policy" target="_blank" rel="noopener">policy</a>.</p>
+  </aside>
+</main>
+<script src="/app.js"></script>
+</body></html>

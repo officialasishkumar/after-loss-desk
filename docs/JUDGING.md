@@ -1,0 +1,12 @@
+# Against the published criteria
+
+The hackathon judges four equally weighted criteria (rules, re-read 22 Oct 2026), with a friction-log bonus of up to 10% and ties broken by Tech, then Design.
+
+| Criterion | What the rules ask | What this entry shows |
+|---|---|---|
+| **Tech implementation** | "how effectively does it use the required tech" | A stateless Streamable HTTP MCP server (spec 2025-11-25; a real MCP client drives it in `tests/test_web_and_mcp.py`), eight tools with closed schemas, an MCP App resource (`ui://afterloss/card.html`, `text/html;profile=mcp-app`, `_meta.ui.resourceUri` on every tool), the documented checkout endpoints with `Idempotency-Key` semantics, an Agent Skill (`SKILL.md`), a deterministic governor with a hash-chained receipt log, and a replayable eight-week simulation whose scoreboard is enforced by the build. |
+| **Design** | "a complete, coherent product experience", "intuitive for the target device" | Built to the Alexa+ add-on design guide: end-to-end task completion (the list, the notices, the purchase, the decisions, all finished here), one title and one action per card, far-field type, voice replies under thirty seconds with at most five items, closed enums (no open text by voice). The executor says six things at the start and then only "approve" or "decline". |
+| **Potential impact** | "credible, specific case", "audience beyond the hackathon" | 3.09M deaths a year; about 500 hours and 18 months per executor (Empathy, 2026). Insurers and employers already pay for bereavement support (Empathy serves 50M+ policyholders); funeral homes and estate attorneys refer. The rule table is a JSON file per state. |
+| **Quality of the idea** | "creative, imaginative use of the required tools", "understanding of the developer ecosystem and end-user needs" | Hits four items on the rules' own Alexa+ creative list: state across sessions (months), orchestration across services (institutions, court, county, bureaus), purchasing (certified copies through Alexa+ checkout), MCP Apps; plus an Agent Skill. Built to the add-on policy: no private data by voice, legal lines quoted not advised, 988 in the first reply, no life-safety claim. Nothing like it among 1,187 hackathon repositories on GitHub (22 Oct sweep). |
+
+**Not claimed:** connection to a real Alexa+ device or the MCP Toolkit (preview, partners only); real institutions (simulated adapters); states other than California.

@@ -1,0 +1,21 @@
+{
+  "name": "the Okafor estate (synthetic)",
+  "date_of_death": "2026-03-01",
+  "start_day": "2026-03-08",
+  "state": "CA",
+  "relationship": "child",
+  "has_will": true,
+  "account_kinds": ["bank", "pension", "insurance", "utilities", "subscriptions", "credit_cards", "vehicle", "employer"],
+  "labels": {"bank": ["First Federal", "Coast Credit Union"], "pension": ["CalPERS"], "insurance": ["Pacific Life"], "utilities": ["PG&E"],
+             "subscriptions": ["24 Hour Fitness"], "credit_cards": ["Visa"], "vehicle": ["2014 Camry"], "employer": ["Mercy Hospital"]},
+  "objection": {"day_offset": 12, "agreed_day_offset": 30, "task": "vehicle_reg5", "who": "her brother wants to keep the car"},
+  "ground_truth_decisions": [
+    ["D0", "ssa_report"],
+    ["D1", "certificates_order"], ["D1", "ssa_return_payment"], ["D1", "utilities_notify"],
+    ["D2", "will_deliver"], ["D2", "bank_notify_1"], ["D2", "bank_notify_2"], ["D2", "insurance_claim"],
+    ["D3", "ssa_survivor"], ["D3", "pension_notify"], ["D3", "vehicle_reg5"],
+    ["D4", "bank_notify_1"], ["D4", "bank_notify_2"], ["D4", "insurance_claim"],
+    ["D5", "vehicle_reg5"]
+  ],
+  "note": "Ground truth = the decisions a careful executor would insist on making herself, written before the simulation was run. D0 is the standing authorisation at the start. Everything else (bureau letters, chasing the gym, the employer call, the credit-card call, filing receipts) is clerical."
+}

@@ -1,0 +1,26 @@
+:root{--bg:#f3f5f8;--panel:#fff;--ink:#15202b;--muted:#5b6672;--line:#dde3ea;--accent:#2a5bd7;--accent-ink:#fff;--ok:#1f8a52;--warn:#b7791f;--bad:#c0392b;--echo:#0b1220}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1520;--panel:#161e2b;--ink:#eef2f6;--muted:#a9b3bf;--line:#2a3442;--accent:#7aa2ff;--accent-ink:#0b1220}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent)}code{font:.9em ui-monospace,Menlo,monospace}
+.bar{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+.brand{font-weight:700}.sim{font-size:.8rem;padding:.15rem .6rem;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+.clock{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:.9rem}
+.layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;padding:18px 16px;max-width:1240px;margin:0 auto}
+@media (max-width:860px){.layout{grid-template-columns:1fr}}
+.echo{display:flex;flex-direction:column;gap:12px}
+.screen{background:var(--echo);border-radius:22px;padding:22px;min-height:360px;box-shadow:0 10px 40px rgba(0,0,0,.25);color:#eef2f6}
+.card h1{font-size:1.7rem;margin:0 0 .35rem;line-height:1.2}.card .muted{color:#aab4bf}.card .row{display:flex;justify-content:space-between;gap:12px;padding:.5rem 0;border-top:1px solid rgba(255,255,255,.12);font-size:1.05rem}
+.card .row:first-of-type{border-top:0}.card .row b{white-space:nowrap}.card .gate{display:inline-block;padding:.1rem .55rem;border-radius:999px;background:var(--accent);color:#fff;font-size:.8rem;margin-right:.3rem}
+.card pre{white-space:pre-wrap;font:.85rem/1.45 ui-monospace,Menlo,monospace;background:rgba(255,255,255,.07);padding:.7rem;border-radius:10px;max-height:260px;overflow:auto}
+.card button{font:inherit;padding:.55rem 1.1rem;border-radius:10px;border:0;background:var(--accent);color:#fff;margin:.8rem .4rem 0 0;cursor:pointer}.card button.alt{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff}
+.card .fine{font-size:.78rem}.card .ok{color:#7ad19a}.card .warn{color:#f0b35a}
+.speak{min-height:3.2rem;padding:.6rem .9rem;border-left:3px solid var(--accent);background:var(--panel);border-radius:0 10px 10px 0;font-size:1.05rem}
+.speak:empty{display:none}.ask{display:flex;gap:8px}.ask input{flex:1;font:inherit;padding:.7rem .9rem;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)}
+button{font:inherit;padding:.65rem 1rem;border-radius:10px;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer}button.alt{background:var(--panel);border:1px solid var(--line);color:var(--ink)}
+button.small{padding:.3rem .7rem;font-size:.85rem;margin:.2rem .3rem .2rem 0}.chips{display:flex;flex-wrap:wrap;gap:8px}.chips button{background:var(--panel);border:1px solid var(--line);color:var(--ink);font-size:.9rem;padding:.45rem .8rem}
+.desk{display:flex;flex-direction:column;gap:12px}.desk details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:.6rem .9rem}.desk summary{cursor:pointer;font-weight:600}
+.log,.receipts{margin:.5rem 0 0;padding-left:1.2rem;font-size:.85rem;max-height:260px;overflow:auto}.log li{margin:.25rem 0}.log .tool{color:var(--accent)}.log .err{color:var(--bad)}
+.receipts li{font-family:ui-monospace,Menlo,monospace;font-size:.78rem;margin:.2rem 0;word-break:break-all}
+.labels{display:grid;grid-template-columns:1fr;gap:6px;margin-top:.5rem}.labels label{display:flex;gap:8px;align-items:center;font-size:.85rem}.labels input{flex:1;font:inherit;padding:.3rem .5rem;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.muted{color:var(--muted)}.small{font-size:.85rem}.fine{font-size:.78rem;color:var(--muted)}
+body.share main{max-width:720px;margin:40px auto;padding:0 16px}.share-list{list-style:none;padding:0}.share-list li{display:flex;justify-content:space-between;gap:12px;padding:.5rem 0;border-top:1px solid var(--line)}.share-list li.done b{color:var(--ok)}.share-list li.waiting b{color:var(--warn)}.share-list li.parked b{color:var(--accent)}

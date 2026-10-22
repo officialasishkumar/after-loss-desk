@@ -1,0 +1,28 @@
+[project]
+name = "afterloss"
+version = "0.1.0"
+description = "After Loss Desk: an Alexa+ add-on for the eighteen months after a death in the family. Keeps the executor's notification ledger, drafts and chases each notice, orders certified death certificates through Alexa+ checkout, and interrupts the executor only at five deterministic gates."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Asish Kumar", email = "officialasishkumar@gmail.com" }, { name = "Akash Kumar" }]
+requires-python = ">=3.12"
+dependencies = ["fastapi>=0.115", "httpx>=0.28", "mcp>=1.24,<2", "pydantic>=2.10", "uvicorn[standard]>=0.32"]
+
+[project.scripts]
+afterloss = "afterloss.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.3", "pytest-asyncio>=0.24"]
+
+[build-system]
+requires = ["uv_build>=0.8,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "afterloss"
+module-root = ""
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -p no:warnings"
+asyncio_mode = "auto"

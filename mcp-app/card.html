@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>After Loss Desk</title>
+<style>
+:root{--ink:#15202b;--muted:#5b6672;--line:#e3e8ee;--accent:#2a5bd7;--ok:#1f8a52;--warn:#b7791f;font-size:20px}
+@media (prefers-color-scheme:dark){:root{--ink:#eef2f6;--muted:#aab4bf;--line:#2b3542;--accent:#7aa2ff}}
+body{margin:0;padding:16px;font:1rem/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:transparent}
+h1{font-size:1.6rem;margin:0 0 .3rem}.muted{color:var(--muted)}.row{display:flex;justify-content:space-between;gap:12px;padding:.45rem 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}.row b{white-space:nowrap}.gate{display:inline-block;padding:.1rem .5rem;border-radius:999px;background:var(--accent);color:#fff;font-size:.8rem}
+button{font:inherit;padding:.6rem 1.1rem;border-radius:10px;border:0;background:var(--accent);color:#fff;margin-top:.8rem}button.alt{background:transparent;border:1px solid var(--line);color:var(--ink)}
+pre{white-space:pre-wrap;font:.85rem/1.4 ui-monospace,Menlo,monospace;background:rgba(127,127,127,.08);padding:.6rem;border-radius:8px}.fine{font-size:.75rem}
+</style></head><body><div id="card"><h1>After Loss Desk</h1><p class="muted">Waiting for the tool result.</p></div>
+<script>
+// MCP Apps (spec 2026-01-26): the host loads this ui:// resource for every tool that names it in _meta.ui.resourceUri,
+// pushes ui/notifications/tool-result, and forwards tools/call requests from the app. Plain postMessage JSON-RPC, no SDK.
+let nextId = 1; const pending = {};
+const send = (msg) => window.parent.postMessage(msg, "*");
+const request = (method, params) => new Promise((res) => { const id = nextId++; pending[id] = res; send({ jsonrpc: "2.0", id, method, params }); });
+window.addEventListener("message", (ev) => {
+  const m = ev.data || {}; if (m.id && pending[m.id]) { pending[m.id](m.result || m.error); delete pending[m.id]; return; }
+  if (m.method === "ui/notifications/tool-result") render((m.params && m.params.structuredContent) || parse(m.params));
+});
+function parse(p){ try { const t = p && p.content && p.content.find(c => c.type === "text"); return t ? JSON.parse(t.text) : null; } catch { return null; } }
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function render(result){
+  const c = result && result.card; const el = document.getElementById("card"); if (!c) { el.innerHTML = "<h1>After Loss Desk</h1><p class='muted'>" + esc(result && (result.speak || result.error)) + "</p>"; return; }
+  let h = "<h1>" + esc(c.title) + "</h1>";
+  if (c.kind === "ledger") { h += `<p class="muted">${esc(c.state)} · as of ${esc(c.today)} · ${c.originals_needed} certified copies needed, ${c.originals_on_hand} on hand</p>`;
+    h += c.rows.filter(r => r.status !== "done").slice(0, 6).map(r => `<div class="row"><span>${esc(r.title)}${r.label ? " <span class='muted'>· " + esc(r.label) + "</span>" : ""}</span><b>${r.days_left == null ? "" : r.days_left + " d"}</b></div>`).join("");
+    if (c.action && c.action.decision_id) h += `<button data-tool="approve" data-arg='${esc(JSON.stringify({ case_id: result.case_id, decision_id: c.action.decision_id }))}'>${esc(c.action.label)}</button>`; }
+  else if (c.kind === "due") { h += c.decisions.map(d => `<div class="row"><span><span class="gate">${esc(d.gate)}</span> ${esc(d.summary)}<br><span class="muted fine">${esc(d.detail)}</span></span></div>
+    <button data-tool="approve" data-arg='${esc(JSON.stringify({ case_id: result.case_id, decision_id: d.id }))}'>Approve</button> <button class="alt" data-tool="decline" data-arg='${esc(JSON.stringify({ case_id: result.case_id, decision_id: d.id }))}'>Decline</button>`).join("");
+    h += c.items.slice(0, 5).map(i => `<div class="row"><span>${esc(i.title)}${i.label ? " <span class='muted'>· " + esc(i.label) + "</span>" : ""}</span><b>${i.days_left == null ? "" : i.days_left + " d"}</b></div>`).join("");
+    if (c.waiting.length) h += `<p class="muted fine">Waiting on ${c.waiting.length} repl${c.waiting.length === 1 ? "y" : "ies"}.</p>`; }
+  else if (c.kind === "draft") { h += `<p class="muted">${esc(c.label || "")} · ${esc(c.channel)}</p><pre>${esc(c.text)}</pre><p class="fine muted">Source: ${esc(c.source && c.source.url)}</p>`; }
+  else if (c.kind === "quote") { h += `<div class="row"><span>${c.count} × $${Number(c.unit_price).toFixed(2)} + $${Number(c.processing).toFixed(2)} processing</span><b>$${Number(c.total).toFixed(2)}</b></div><p class="muted fine">${esc(c.fee_note)}</p>`;
+    if (c.session_id) h += `<p class="muted">Alexa+ confirms the payment on your device (payment instrument and PIN stay with Alexa).</p>`; }
+  else if (c.kind === "progress") { h += `<div class="row"><span>Waiting on replies</span><b>${c.waiting}</b></div><div class="row"><span>Waiting on you</span><b>${c.parked}</b></div><div class="row"><span>Receipt chain</span><b>${c.chain_ok ? "intact" : "broken"} · ${c.receipts}</b></div>`;
+    if (c.share_url) h += `<p class="fine muted">${esc(c.share_url)}</p>`; }
+  el.innerHTML = h;
+  el.querySelectorAll("button[data-tool]").forEach(b => b.addEventListener("click", async () => { b.disabled = true; const r = await request("tools/call", { name: b.dataset.tool, arguments: JSON.parse(b.dataset.arg) }); render((r && r.structuredContent) || parse(r)); }));
+}
+request("ui/initialize", { protocolVersion: "2026-01-26", capabilities: {}, clientInfo: { name: "after-loss-desk-card", version: "0.1.0" } }).then(() => send({ jsonrpc: "2.0", method: "ui/notifications/initialized" }));
+</script></body></html>
