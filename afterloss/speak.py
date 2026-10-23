@@ -14,14 +14,14 @@ def _n(n: int, one: str, many: str) -> str:
 def ledger_summary(case: dict[str, Any], originals: int) -> str:
     from datetime import date
     open_tasks = [t for t in case["tasks"] if t["status"] not in ("done", "cancelled")]
-    statutory = [t for t in open_tasks if t["deadline_kind"] == "statutory" and t["deadline"]]
-    for t in statutory:
-        t["deadline_days_left"] = max((date.fromisoformat(t["deadline"]) - date.fromisoformat(case["today"])).days, 0)
-    s = (f"I have made the list: {_n(len(open_tasks), 'thing', 'things')} to tell or do, over the next few months. "
-         f"You will need about {_n(originals, 'certified copy', 'certified copies')} of the certificate. ")
+    statutory = sorted((t for t in open_tasks if t["deadline_kind"] == "statutory" and t["deadline"]), key=lambda t: t["deadline"])
+    s = (f"I have made your list: {_n(len(open_tasks), 'thing', 'things')}. "
+         f"You will need about {_n(originals, 'certified copy', 'certified copies')}. ")
     if statutory:
-        s += f"One has a firm date: {statutory[0]['spoken']}, within {_n(int(statutory[0]['deadline_days_left']), 'day', 'days')}. {LEGAL_LINE} "
-    s += "I can send the routine notices with copies on your behalf and only ask you when money, an original, a signature or a closure is involved. Shall I?"
+        left = (date.fromisoformat(statutory[0]["deadline"]) - date.fromisoformat(case["today"])).days
+        when = f"overdue by {_n(-left, 'day', 'days')}" if left < 0 else "due today" if left == 0 else f"within {_n(left, 'day', 'days')}"
+        s += f"One has a firm date: {statutory[0]['spoken']}, {when}. {LEGAL_LINE} "
+    s += "Shall I send the routine notices? I will still ask before money, originals, signatures or closures."
     return assert_speakable(s, case)
 
 

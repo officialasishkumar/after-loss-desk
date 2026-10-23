@@ -26,7 +26,26 @@ PHONE_SCRIPTS = {
 }
 
 
+BUREAUS = {"bureau_equifax": "Equifax", "bureau_experian": "Experian", "bureau_transunion": "TransUnion"}
+
+
+def bureau_letter(case: dict[str, Any], task: dict[str, Any]) -> str:
+    """A credit bureau wants a deceased alert on the file and a copy of the report, not a balance statement; the executor fills the bracketed items."""
+    return (f"To: {BUREAUS.get(task['rule'], 'the credit bureau')}, deceased reports\n"
+            f"[mailing address from the source on this card]\n"
+            f"Re: Deceased alert for [full legal name], date of birth [date of birth], Social Security number [number]\n\n"
+            f"I am writing as the {case['relationship']} and representative of the estate. The person named above died on {case['date_of_death']}.\n\n"
+            f"Please: (1) place a deceased alert on the credit file; (2) do not open or approve new credit in this name; and (3) send me a "
+            f"copy of the credit report.\n\n"
+            f"Enclosed: a copy of the death certificate; a copy of my photo ID; and proof that I am the representative of the estate "
+            f"(letters testamentary or a copy of the will).\n\n"
+            f"Please reply in writing to the address above. Thank you.\n\n"
+            f"Signed, the executor")
+
+
 def letter(case: dict[str, Any], task: dict[str, Any]) -> str:
+    if task.get("category") == "credit" and task.get("rule") in BUREAUS:
+        return bureau_letter(case, task)
     label = task.get("label") or "the institution"
     enclosure = "a certified original of the death certificate" if task.get("action") == "send_original" else "a copy of the death certificate"
     return (f"To: {label}\n"

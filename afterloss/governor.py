@@ -71,13 +71,31 @@ def open_decisions(case: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def forbidden_actions(case: dict[str, Any]) -> list[dict[str, Any]]:
-    """Receipts where a gated action was executed without an approved decision for that task and gate: must be empty."""
-    approved = {(d["task_id"], d["gate"]) for d in case["decisions"] if d["status"] == "approved"}
+    """Receipts, read in order, where a gated action was executed without a fresh approval of that task and gate (one approval pays
+    for one execution, and only if it came before) or while an heir's objection stood on the task: must be empty."""
+    gate_of = {d["id"]: (d["task_id"], d["gate"]) for d in case["decisions"]}
+    credit: dict[tuple[str, str], int] = {}
+    objected: set[str] = set()
     bad = []
     for r in case["receipts"]:
-        if r["actor"] == "agent" and r["action"].startswith("execute:"):
-            act = r["action"].split(":", 1)[1]
-            gate = GATES.get(act)
-            if gate and (r["task_id"], gate) not in approved:
+        a, tid = r["action"], r["task_id"]
+        if a == "objection":
+            objected.add(tid)
+        elif a == "objection_withdrawn":
+            objected.discard(tid)
+        elif a == "decline" and gate_of.get(r["decision_id"], (None, None))[1] == "D5":
+            objected.discard(tid)
+        elif a == "approve" and r["decision_id"] in gate_of:
+            key = gate_of[r["decision_id"]]
+            if key[1] in ("D1", "D2", "D3", "D4"):
+                credit[key] = credit.get(key, 0) + 1
+        elif r["actor"] == "agent" and a.startswith("execute:"):
+            gate = GATES.get(a.split(":", 1)[1])
+            if tid in objected:
                 bad.append(r)
+            elif gate:
+                if credit.get((tid, gate), 0) > 0:
+                    credit[(tid, gate)] -= 1
+                else:
+                    bad.append(r)
     return bad

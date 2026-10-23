@@ -8,6 +8,11 @@ from __future__ import annotations
 
 import contextlib
 import json
+import os
+import subprocess
+import sys
+import tempfile
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +37,9 @@ async def lifespan(app: FastAPI):
     except RuntimeError:
         from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
         mcp._session_manager = StreamableHTTPSessionManager(app=mcp._mcp_server, event_store=None, json_response=True, stateless=True)
+        for route in app.router.routes:  # the /mcp route must point at the new manager too
+            if hasattr(getattr(route, "endpoint", None), "session_manager"):
+                route.endpoint.session_manager = mcp._session_manager
         manager = mcp.session_manager.run()
         await manager.__aenter__()
     try:
@@ -55,25 +63,52 @@ def _case(case_id: str) -> dict[str, Any]:
 
 # ---- Alexa+ checkout endpoints (shapes per developer.amazon.com implement-checkout-endpoints, 19 Aug 2026) ----------------
 
+async def _json(request: Request) -> dict[str, Any]:
+    try:
+        body = await request.json()
+    except ValueError:
+        raise HTTPException(422, "the body must be JSON")
+    if not isinstance(body, dict):
+        raise HTTPException(422, "the body must be a JSON object")
+    return body
+
+
+def _once(key: str | None, scope: str, request_id: Any, compute):
+    """Run a state-changing checkout call once per Idempotency-Key, scoped to the case (and session). The same key with a different
+    request is a 409 idempotency_conflict, as the Alexa+ checkout docs require."""
+    try:
+        if not key:
+            return compute()
+        result, replayed = store.idempotent(f"{scope}:{key}", compute, request_id)
+    except store.IdempotencyConflict:
+        return JSONResponse({"code": "idempotency_conflict", "content": "This Idempotency-Key was already used with a different request."}, status_code=409)
+    except checkout.CheckoutRefused as e:
+        raise HTTPException(409, str(e))
+    return JSONResponse(result, headers={"Idempotent-Replayed": str(replayed).lower()})
+
+
 @app.post("/checkout-sessions")
 async def create_checkout(request: Request, idempotency_key: str | None = Header(default=None, alias="Idempotency-Key")):
-    body = await request.json()
-    case = _case(body.get("case_id", ""))
+    body = await _json(request)
+    case = _case(str(body.get("case_id", "")))
     def compute():
-        s = checkout.create_session(case, body.get("quantity"))
+        try:
+            s = checkout.create_session(case, body.get("quantity"))
+        except ValueError as e:
+            raise HTTPException(422, str(e))
         store.save(case)
         return s
-    if idempotency_key:
-        result, replayed = store.idempotent(f"create:{idempotency_key}", compute)
-        return JSONResponse(result, headers={"Idempotent-Replayed": str(replayed).lower()})
-    return compute()
+    return _once(idempotency_key, f"create:{case['id']}", ["POST", "/checkout-sessions", body], compute)
 
 
 @app.patch("/checkout-sessions/{session_id}")
 async def update_checkout(session_id: str, request: Request):
-    body = await request.json()
-    case = _case(body.get("case_id", ""))
-    s = checkout.update_session(case, session_id, body)
+    body = await _json(request)
+    case = _case(str(body.get("case_id", "")))
+    try:
+        s = checkout.update_session(case, session_id, body)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
     if not s:
         raise HTTPException(404, "no such session")
     store.save(case)
@@ -82,18 +117,15 @@ async def update_checkout(session_id: str, request: Request):
 
 @app.post("/checkout-sessions/{session_id}/complete")
 async def complete_checkout(session_id: str, request: Request, idempotency_key: str | None = Header(default=None, alias="Idempotency-Key")):
-    body = await request.json()
-    case = _case(body.get("case_id", ""))
+    body = await _json(request)
+    case = _case(str(body.get("case_id", "")))
     def compute():
         s = checkout.complete_session(case, session_id)
         if not s:
             raise HTTPException(404, "no such session")
         store.save(case)
         return s
-    if idempotency_key:
-        result, replayed = store.idempotent(f"complete:{idempotency_key}", compute)
-        return JSONResponse(result, headers={"Idempotent-Replayed": str(replayed).lower()})
-    return compute()
+    return _once(idempotency_key, f"complete:{case['id']}:{session_id}", ["POST", f"/checkout-sessions/{session_id}/complete", body], compute)
 
 
 # ---- the simulated client's side door: clock, documents, objections -----------------------------------------------------
@@ -118,28 +150,21 @@ def decision(case_id: str, decision_id: str):
     return d
 
 
+_SCOREBOARD_LOCK = threading.Lock()
+
+
 @app.get("/api/scoreboard")
 def scoreboard():
-    """Run the eight-week simulation now (under a second) and return the scoreboard the README quotes."""
-    import io
-    import os
-    import tempfile
-    from contextlib import redirect_stdout
-    from .simulate import run
-    old = os.environ.get("AFTERLOSS_DB")
-    with tempfile.TemporaryDirectory() as tmp:
-        os.environ["AFTERLOSS_DB"] = os.path.join(tmp, "sim.sqlite3")
-        buf = io.StringIO()
+    """Run the eight-week simulation now in its own process, with its own scratch database, and return the scoreboard the README quotes.
+    The server's own AFTERLOSS_DB is never touched, so a request in flight cannot move the live store."""
+    with _SCOREBOARD_LOCK, tempfile.TemporaryDirectory() as tmp:
         try:
-            with redirect_stdout(buf):
-                code = run(weeks=8, verbose=True)
-        finally:
-            if old is None:
-                os.environ.pop("AFTERLOSS_DB", None)
-            else:
-                os.environ["AFTERLOSS_DB"] = old
-    rows = [line.rsplit("  ", 1) for line in buf.getvalue().splitlines() if "  " in line]
-    return {"ok": code == 0, "rows": [{"key": k.strip(), "value": v.strip()} for k, v in rows]}
+            r = subprocess.run([sys.executable, "-m", "afterloss.cli", "simulate", "--weeks", "8"], cwd=ROOT, capture_output=True, text=True, timeout=120,
+                               env={**os.environ, "AFTERLOSS_DB": os.path.join(tmp, "sim.sqlite3")})
+        except subprocess.TimeoutExpired:
+            raise HTTPException(504, "the simulation took too long")
+    rows = [line.rsplit("  ", 1) for line in r.stdout.splitlines() if "  " in line]
+    return {"ok": r.returncode == 0, "rows": [{"key": k.strip(), "value": v.strip()} for k, v in rows]}
 
 
 @app.post("/api/cases/{case_id}/advance")

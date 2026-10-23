@@ -8,6 +8,7 @@ Apps, by Alexa's native components otherwise, and by the simulated client in `si
 from __future__ import annotations
 
 import os
+from datetime import date
 from pathlib import Path
 from typing import Any, Literal
 
@@ -40,6 +41,12 @@ def _case(case_id: str) -> dict[str, Any]:
 def start_case(date_of_death: str, relationship: Relationship, has_will: bool, account_kinds: list[Kind], state: State = "CA") -> dict[str, Any]:
     """Start settling someone's affairs. Needs only: the date of death, your relationship, whether there is a will, and which
     kinds of accounts exist. No names, no account numbers: those go on the web client, never by voice."""
+    try:
+        died = date.fromisoformat(date_of_death)
+    except ValueError:
+        raise ValueError("The date of death must be a real date written like 2026-10-01.")
+    if died > date.today():
+        raise ValueError("The date of death cannot be in the future.")
     case = engine.start(date_of_death=date_of_death, state=state, relationship=relationship, has_will=has_will, account_kinds=list(account_kinds))
     card = engine.ledger_card(case)
     return {"case_id": case["id"], "speak": speak.ledger_summary(case, card["originals_needed"]) + " " + policy.CRISIS_LINE, "card": card,
@@ -76,7 +83,7 @@ def approve(case_id: str, decision_id: str) -> dict[str, Any]:
     case = _case(case_id)
     d = engine.approve(case, decision_id)
     if not d:
-        return {"error": "No open decision with that id."}
+        return {"error": "No open decision with that id. If an heir has objected since it was raised, it is on hold."}
     return {"case_id": case_id, "speak": policy.assert_speakable("Done. I have written it down. " + speak.due_summary(case, ledger.due(case, horizon_days=engine.HORIZON_DAYS), governor.open_decisions(case)), case),
             "card": engine.due_card(case)}
 
@@ -129,6 +136,18 @@ def share_progress(case_id: str) -> dict[str, Any]:
 def card_resource() -> str:
     """The MCP App that renders every tool result as one card: a title, one or two fields, one action."""
     return (ROOT / "mcp-app" / "card.html").read_text()
+
+
+def _close_schemas() -> None:
+    """Tool inputs are closed objects: an unknown argument is rejected instead of silently ignored."""
+    for tool in mcp._tool_manager.list_tools():
+        tool.parameters["additionalProperties"] = False
+        model = tool.fn_metadata.arg_model
+        model.model_config["extra"] = "forbid"
+        model.model_rebuild(force=True)
+
+
+_close_schemas()
 
 
 def run() -> None:

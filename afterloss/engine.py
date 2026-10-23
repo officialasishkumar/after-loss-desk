@@ -55,6 +55,9 @@ def execute(case: dict[str, Any], task: dict[str, Any]) -> dict[str, Any]:
         return {"denied": gate}
     if verdict == "gate" and gate == "D0":
         return {"waiting_for_authorisation": True}  # one standing authorisation for the whole case, raised at start; never per task
+    if verdict == "gate" and gate == "D1" and task["rule"] == "certificates_order":
+        from . import checkout
+        return checkout.create_session(case)  # the D1 for the certificates is always raised with its quantity and total
     if verdict == "gate":
         summary, detail = _summary_for(task, gate)
         return governor.raise_decision(case, task, gate, summary, detail, action)
@@ -118,20 +121,31 @@ def approve(case: dict[str, Any], decision_id: str) -> dict[str, Any] | None:
     d = next((x for x in case["decisions"] if x["id"] == decision_id and x["status"] == "raised"), None)
     if not d:
         return None
+    task = next(t for t in case["tasks"] if t["id"] == d["task_id"])
+    if d["gate"] not in ("D0", "D5"):
+        verdict, gate = governor.evaluate(case, task, d["action"])  # the governor runs again now: an heir may have objected since this was raised
+        if (verdict, gate) != ("gate", d["gate"]):
+            d["status"], d["resolved_on"], d["resolved_by"] = "superseded", case["today"], "governor"
+            governor.receipt(case, actor="agent", action="supersede", task_id=task["id"], decision_id=d["id"], note=f"{gate or verdict} now stands; not executed")
+            task["status"] = "parked"
+            store.save(case)
+            return None
+    session = None
+    if d["gate"] == "D1" and task["rule"] == "certificates_order":
+        session = next((x for x in case["checkout_sessions"] if x.get("decision_id") == d["id"]), None)
+        if not session or session["status"] not in ("created", "updated"):
+            raise ValueError("there is no open checkout session for that order")
     d["status"], d["resolved_on"], d["resolved_by"] = "approved", case["today"], "executor"
     governor.receipt(case, actor="executor", action="approve", task_id=d["task_id"], decision_id=d["id"])
-    task = next(t for t in case["tasks"] if t["id"] == d["task_id"])
     if d["gate"] == "D0":
         case["standing_authorisation"] = True
         task["status"] = "open"
         tick(case)
     elif d["gate"] == "D5":
         task["status"] = "held"
-    elif task["rule"] == "certificates_order":
-        # approved by voice rather than on the checkout card: complete the open session (or open one) so the copies are ordered
+    elif session:
         from . import checkout
-        session = next((x for x in case["checkout_sessions"] if x["status"] != "completed"), None) or checkout.create_session(case)
-        checkout.complete_session(case, session["id"])
+        checkout.complete_session(case, session["id"])  # approved by voice rather than on the checkout card
     else:
         task["status"] = "open"
         _do(case, task, d["action"])
@@ -154,6 +168,9 @@ def decline(case: dict[str, Any], decision_id: str, reason: str = "executor will
         task["status"] = "open"
     else:
         task["status"] = "held"
+        for s in case["checkout_sessions"]:
+            if s.get("decision_id") == d["id"] and s["status"] in ("created", "updated"):
+                s["status"] = "cancelled"
     store.save(case)
     return d
 
@@ -163,6 +180,12 @@ def object_to(case: dict[str, Any], task_id: str, who: str = "an heir") -> dict[
     if task_id not in case["objections"]:
         case["objections"].append(task_id)
     governor.receipt(case, actor="heir", action="objection", task_id=task_id, note=who)
+    for old in case["decisions"]:  # a gated ask raised before the objection no longer stands; it is raised again if the heirs agree
+        if old["task_id"] == task_id and old["status"] == "raised" and old["gate"] not in ("D0", "D5"):
+            old["status"], old["resolved_on"], old["resolved_by"] = "superseded", case["today"], "objection"
+            for s in case["checkout_sessions"]:
+                if s.get("decision_id") == old["id"] and s["status"] in ("created", "updated"):
+                    s["status"] = "cancelled"
     d = execute(case, task)
     store.save(case)
     return d

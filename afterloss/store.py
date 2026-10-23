@@ -27,6 +27,8 @@ def _conn() -> sqlite3.Connection:
     c = sqlite3.connect(db_path(), isolation_level=None, check_same_thread=False)
     c.execute("CREATE TABLE IF NOT EXISTS cases (id TEXT PRIMARY KEY, doc TEXT NOT NULL, updated TEXT NOT NULL)")
     c.execute("CREATE TABLE IF NOT EXISTS idempotency (key TEXT PRIMARY KEY, result TEXT NOT NULL, expires REAL NOT NULL)")
+    if "fp" not in {r[1] for r in c.execute("PRAGMA table_info(idempotency)")}:
+        c.execute("ALTER TABLE idempotency ADD COLUMN fp TEXT")
     return c
 
 
@@ -52,17 +54,26 @@ def find_by_share_token(token: str) -> dict[str, Any] | None:
     return None
 
 
-def idempotent(key: str, compute, ttl_seconds: float = 24 * 3600) -> tuple[dict[str, Any], bool]:
-    """Return the stored result for `key` if it exists and has not expired, else compute, store and return it.
+class IdempotencyConflict(Exception):
+    """The key was used before with a different request."""
+
+
+def idempotent(key: str, compute, request: Any = None, ttl_seconds: float = 24 * 3600) -> tuple[dict[str, Any], bool]:
+    """Return the stored result for `key` if it exists and has not expired, else compute, store and return it. `request` is
+    fingerprinted with the result: the same key with a different request raises IdempotencyConflict (HTTP 409), never a replay.
     Alexa+ sends an Idempotency-Key on every state-changing checkout call and the add-on must keep the result for 24 hours."""
+    import hashlib
     import time
     now = time.time()
+    fp = hashlib.sha256(json.dumps(request, sort_keys=True, default=str).encode()).hexdigest()
     with _LOCK, _conn() as c:
-        row = c.execute("SELECT result, expires FROM idempotency WHERE key=?", (key,)).fetchone()
+        row = c.execute("SELECT result, expires, fp FROM idempotency WHERE key=?", (key,)).fetchone()
         if row and row[1] > now:
+            if row[2] != fp:
+                raise IdempotencyConflict(key)
             return json.loads(row[0]), True
         result = compute()
-        c.execute("INSERT OR REPLACE INTO idempotency (key, result, expires) VALUES (?, ?, ?)", (key, json.dumps(result), now + ttl_seconds))
+        c.execute("INSERT OR REPLACE INTO idempotency (key, result, expires, fp) VALUES (?, ?, ?, ?)", (key, json.dumps(result), now + ttl_seconds, fp))
     return result, False
 
 

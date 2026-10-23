@@ -71,7 +71,7 @@ def run(weeks: int = 8, verbose: bool = True, estate: dict[str, Any] = ESTATE) -
         "weeks": weeks, "actions_taken": len(executed), "autonomous": actions_auto, "with_approval": len(executed) - actions_auto,
         "interruptions_raised": len(case["decisions"]), "asked_first": sum(1 for d in case["decisions"] if d["gate"] != "D0"),
         "interruption_precision": round(precision, 3), "decision_recall": round(recall, 3), "forbidden_actions": len(forbidden),
-        "confirm_everything_baseline": len(executed) + len(case["checkout_sessions"]),
+        "confirm_everything_baseline": len(executed),
         "tasks_done": f"{done} / {len(case['tasks'])}", "missed_deadlines": len(ledger.missed_deadlines(case)),
         "days_to_settle": (date.fromisoformat(settle_day) - date.fromisoformat(estate["start_day"])).days,
         "originals_left": case.get("originals_on_hand", 0), "receipts": len(case["receipts"]), "chain_verified": governor.verify_chain(case),
