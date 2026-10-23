@@ -16,10 +16,9 @@ export async function mountChain(container, receipts, chainOk, onHover) {
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(W, H);
   container.appendChild(renderer.domElement);
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x0f1419, 0.012);
   const camera = new THREE.PerspectiveCamera(32, W / H, 0.1, 400);
   const group = new THREE.Group(); scene.add(group);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.9));
   const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(4, 8, 6); scene.add(key);
   const rim = new THREE.DirectionalLight(0x3d8cff, 0.7); rim.position.set(-6, 2, -4); scene.add(rim);
   const COLOR = { alexa: 0x3d8cff, agent: 0x8a96a4, executor: 0x3ecf8e, institution: 0xb9c3cf, heir: 0xf0b429 };

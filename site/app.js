@@ -8,8 +8,7 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 const icon = (id) => `<svg class="icon" aria-hidden="true"><use href="#${id}"/></svg>`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-let orbit = null;
-const state = { caseId: new URLSearchParams(location.search).get("case"), lastDecision: null, muted: false, rpc: 0, init: false, view: "echo", story: [], deskIndex: 0, snapshot: null, voice: Promise.resolve(), sayToken: 0, playing: false, prevStatus: {}, filter: "all", day: null };
+const state = { devState: "idle", caseId: new URLSearchParams(location.search).get("case"), lastDecision: null, muted: false, rpc: 0, init: false, view: "echo", story: [], deskIndex: 0, snapshot: null, voice: Promise.resolve(), sayToken: 0, playing: false, prevStatus: {}, filter: "all", day: null };
 const TELL = "My husband died last week. There is a will. He had a bank account, a pension, life insurance, the power bill, a gym and a car.";
 const GATE_WORD = { D0: "your say-so to start", D1: "money leaves the estate", D2: "an original leaves your hands", D3: "your signature or a visit", D4: "cannot be undone", D5: "an heir objects" };
 const GATE_SHORT = { D0: "START", D1: "MONEY", D2: "ORIGINAL", D3: "SIGNATURE", D4: "IRREVERSIBLE", D5: "OBJECTION" };
@@ -51,10 +50,10 @@ async function call(name, args) {
 
 // ---------- device states, voice out, voice in ----------
 function device(s) {
-  $("device").dataset.state = s;
+  state.devState = s;
   const gate = state.snapshot?.due.decisions.length ? "gate" : "idle";
   const v = s === "idle" ? gate : s;
-  $("scene").dataset.state = v; document.body.dataset.state = v; orbit?.ambient(v);
+  $("scene").dataset.state = v; document.body.dataset.state = v;
 }
 // Speaks the reply and lights each word as it is spoken (boundary events when the voice gives them, a timer otherwise).
 // Returns a promise that resolves when the voice is done, which the story waits on.
@@ -73,7 +72,7 @@ function say(text) {
     const byTimer = () => { const t0 = performance.now(); (function tick() { if (done) return; const p = (performance.now() - t0) / total; light(Math.ceil(p * spans.length)); if (p >= 1) finish(); else requestAnimationFrame(tick); })(); };
     if (state.muted || !("speechSynthesis" in window)) { device("speaking"); byTimer(); return; }
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text); u.rate = 0.98; let boundaries = false;
+    const u = new SpeechSynthesisUtterance(text); u.rate = 0.92; u.pitch = 1; const vc = pickVoice(); if (vc) { u.voice = vc; u.lang = vc.lang; } let boundaries = false;
     u.onstart = () => device("speaking");
     u.onboundary = (e) => { boundaries = true; const n = starts.findIndex((s) => s > e.charIndex); light(n === -1 ? spans.length : n); };
     u.onend = finish; u.onerror = finish;
@@ -83,6 +82,13 @@ function say(text) {
   });
   return state.voice;
 }
+// Voices: the calmest the browser offers first (Chrome's Google voices, then the better system ones), or the one you picked.
+const PREFERRED = ["Google UK English Female", "Google US English", "Samantha", "Karen", "Moira", "Tessa", "Daniel", "Google UK English Male"];
+function voices() { return ("speechSynthesis" in window ? speechSynthesis.getVoices() : []).filter((v) => v.lang.startsWith("en") && !/Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Eddy|Flo|Fred|Good News|Grandma|Grandpa|Jester|Junior|Kathy|Organ|Ralph|Reed|Rocko|Sandy|Shelley|Superstar|Trinoids|Whisper|Wobble|Zarvox|Hysterical/.test(v.name)); }
+function pickVoice() { const all = voices(); let want = null; try { want = localStorage.getItem("ald-voice"); } catch {} return all.find((v) => v.name === want) || PREFERRED.map((n) => all.find((v) => v.name === n)).find(Boolean) || all[0] || null; }
+function fillVoices() { const sel = $("voice"); const all = voices(); if (!all.length) return; const cur = pickVoice(); sel.innerHTML = all.map((v) => `<option value="${esc(v.name)}" ${cur && v.name === cur.name ? "selected" : ""}>${esc(v.name.replace("Google ", "").replace(" English", ""))}</option>`).join(""); }
+if ("speechSynthesis" in window) { fillVoices(); speechSynthesis.addEventListener("voiceschanged", fillVoices); }
+$("voice").addEventListener("change", () => { try { localStorage.setItem("ald-voice", $("voice").value); } catch {} speechSynthesis.cancel(); say("This is how I will sound."); });
 const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (!Rec) { $("mic").disabled = true; $("mic").title = "Speech input needs Chrome"; }
 else {
@@ -90,7 +96,7 @@ else {
     const rec = new Rec(); rec.lang = "en-US"; rec.interimResults = false;
     $("mic").classList.add("on"); device("listening");
     rec.onresult = (e) => { $("utterance").value = e.results[0][0].transcript; $("ask").requestSubmit(); };
-    rec.onend = () => { $("mic").classList.remove("on"); if ($("device").dataset.state === "listening") device("idle"); };
+    rec.onend = () => { $("mic").classList.remove("on"); if (state.devState === "listening") device("idle"); };
     rec.onerror = () => { toast("Could not hear that."); };
     rec.start();
   });
@@ -235,6 +241,33 @@ async function handoff() {
   $("handoff-skip").addEventListener("click", () => { box.hidden = true; $("scene").classList.remove("handing"); });
 }
 
+// ---------- the hub: the desk in the middle, every institution around it (SVG; pulses ride the spokes) ----------
+const NAMES = { ssa_report: "Social Security", ssa_return_payment: "SSA payment", ssa_survivor: "Survivor benefits", will_deliver: "Probate court", certificates_order: "County clerk", bureau_equifax: "Equifax", bureau_experian: "Experian", bureau_transunion: "TransUnion", bank_notify: "Bank", pension_notify: "Pension", employer_notify: "Employer", insurance_claim: "Insurer", utilities_notify: "Utility", phone_internet_notify: "Phone", subscription_cancel: "Gym", credit_card_notify: "Card issuer", vehicle_reg5: "DMV" };
+const CATS = [["ssa", "ssa"], ["will", "court"], ["certificates", "clerk"], ["bureau", "bureau"], ["bank", "bank"], ["pension", "pension"], ["employer", "employer"], ["insurance", "insurer"], ["utilities", "utility"], ["phone", "phone"], ["subscription", "gym"], ["credit_card", "card"], ["vehicle", "dmv"]];
+const catOf = (id) => (CATS.find(([p]) => id.replace(/^ghost_/, "").startsWith(p)) || [0, "other"])[1];
+const nameOf = (id, label) => label || NAMES[Object.keys(NAMES).find((p) => id.replace(/^ghost_/, "").startsWith(p))] || id.replace(/_/g, " ");
+const GHOSTS = ["ssa_report", "will_deliver", "certificates_order", "bureau_equifax", "bank_notify", "pension_notify", "insurance_claim", "utilities_notify", "subscription_cancel", "vehicle_reg5"].map((id) => ({ id: "ghost_" + id, status: "ghost", label: null }));
+const HUB = { cx: 320, cy: 272, rx: 258, ry: 198 };
+function renderHub(rows, prev) {
+  const n = rows.length; const first = !Object.keys(prev).length; let spokes = "", avs = "";
+  rows.forEach((r, i) => {
+    const a = -Math.PI / 2 + (i + 0.5) / n * Math.PI * 2; const x = (HUB.cx + Math.cos(a) * HUB.rx).toFixed(1), y = (HUB.cy + Math.sin(a) * HUB.ry).toFixed(1);
+    const changed = prev[r.id] && prev[r.id] !== r.status; const badge = { done: "i-check", parked: "i-diamond", held: "i-hand", waiting: "i-half" }[r.status];
+    spokes += `<path class="spoke ${esc(r.status)}" data-id="${esc(r.id)}" d="M${HUB.cx} ${HUB.cy} L${x} ${y}"/>`;
+    avs += `<g class="av ${esc(r.status)} ${changed ? "pop" : ""} ${first ? "born" : ""}" style="--i:${i}" transform="translate(${x} ${y})"><g class="in"><circle class="ring" r="30"/><circle class="disc" r="26"/><use href="#c-${catOf(r.id)}" x="-14" y="-14" width="28" height="28"/><g class="badge" transform="translate(19 -19)"><circle r="10"/>${badge ? `<use href="#${badge}" x="-6" y="-6" width="12" height="12"/>` : ""}</g></g><text y="${Math.sin(a) < -0.2 ? -42 : 52}">${esc(nameOf(r.id, r.label))}</text></g>`;
+  });
+  $("hub").innerHTML = `<g class="spokes">${spokes}</g><g class="hubc" transform="translate(${HUB.cx} ${HUB.cy})"><circle class="hub-ring" r="40"/><rect class="hub-bar" x="-16" y="24" width="32" height="4" rx="2"/><circle class="hub-dot" r="6"/></g><g class="avs">${avs}</g><g id="pulses"></g>`;
+}
+function pulse(id, dir) {
+  const sp = $("hub").querySelector(`.spoke[data-id="${CSS.escape(id)}"]`); if (!sp) return;
+  const m = sp.getAttribute("d").match(/M([\d.]+) ([\d.]+) L([\d.]+) ([\d.]+)/); if (!m) return;
+  const path = dir === "out" ? `M${m[1]} ${m[2]} L${m[3]} ${m[4]}` : `M${m[3]} ${m[4]} L${m[1]} ${m[2]}`;
+  const c = document.createElementNS("http://www.w3.org/2000/svg", "circle"); c.setAttribute("r", "6"); c.setAttribute("class", `pulse ${dir}`);
+  c.innerHTML = `<animateMotion dur="0.9s" fill="freeze" path="${path}" calcMode="spline" keySplines="0.3 0 0.2 1" keyTimes="0;1" keyPoints="0;1"/>`;
+  $("pulses").appendChild(c); setTimeout(() => c.remove(), 1200);
+}
+renderHub(GHOSTS, {});
+
 // ---------- snapshot: the wall, the clock, the day row, the desk count ----------
 function odometer(n) {
   const el = $("odo"); const s = String(Math.max(0, n)); const need = Math.max(s.length, 1);
@@ -249,16 +282,18 @@ async function refresh() {
   $("today").textContent = c.today; $("plate-time").textContent = c.today;
   const since = Math.round((new Date(c.today) - new Date(c.ledger.date_of_death)) / 864e5); $("since").textContent = `day ${since} · replay clock`;
   odometer(since); $("day-sub").textContent = `${c.today} · since the death`;
-  const rows = c.ledger.rows; const first = !Object.keys(state.prevStatus).length;
+  const rows = c.ledger.rows; const first = !Object.keys(state.prevStatus).length; const n = c.due.decisions.length;
   $("ledger-n").textContent = `${rows.filter((x) => x.status === "done").length} of ${rows.length} done`;
   const word = { done: "done", waiting: "waiting", parked: "needs you", held: "held", open: "open" };
   $("ledger").innerHTML = rows.map((x, i) => { const ic = { done: "i-check", waiting: "i-half", parked: "i-diamond", held: "i-hand" }[x.status] || "i-open"; const changed = state.prevStatus[x.id] && state.prevStatus[x.id] !== x.status; const dl = x.deadline ? `<span class="dl ${x.days_left < 0 && x.status !== "done" ? "late" : ""} ${x.deadline_kind === "statutory" ? "stat" : ""}" title="${x.deadline_kind} date">${x.status === "done" ? "" : x.days_left == null ? "" : x.days_left < 0 ? `${-x.days_left} d late` : `${x.days_left} d left`}</span>` : `<span class="dl"></span>`;
     return `<li class="${esc(x.status)} ${first ? "new" : ""} ${changed ? "changed" : ""}" style="--i:${i}" title="${esc(x.status)}"><span class="st">${icon(ic)}${word[x.status] || esc(x.status)}</span><span><span class="t">${esc(x.title)}</span>${x.label ? `<span class="lab"> · ${esc(x.label)}</span>` : ""}</span>${dl}</li>`; }).join("");
-  // the ring: nodes follow the ledger; a pulse runs out when a notice goes and back when a reply lands
-  if (orbit) { orbit.setNodes(rows.length ? rows : GHOSTS); let k = 0; for (const x of rows) { const was = state.prevStatus[x.id]; if (!was || was === x.status) continue; const out = was === "open", back = x.status === "parked" || x.status === "done" || x.status === "held"; if (out) setTimeout(() => orbit.pulse(x.id, "out"), k++ * 140); if (back && was !== "open") setTimeout(() => orbit.pulse(x.id, "in"), k++ * 140); } }
+  // the hub: one avatar per institution; a pulse runs out when a notice goes and back when a reply lands
+  renderHub(rows.length ? rows : GHOSTS, state.prevStatus);
+  let k = 0; for (const x of rows) { const was = state.prevStatus[x.id]; if (!was || was === x.status) continue; const out = was === "open", back = x.status === "parked" || x.status === "done" || x.status === "held"; if (out) setTimeout(() => pulse(x.id, "out"), k++ * 160); if (back && was !== "open") setTimeout(() => pulse(x.id, x.status === "done" ? "in" : "gate"), k++ * 160); }
+  $("screen-status").textContent = n ? `${n} need${n === 1 ? "s" : ""} you` : rows.some((x) => x.status === "waiting") ? `waiting on ${rows.filter((x) => x.status === "waiting").length}` : `${rows.filter((x) => x.status === "done").length} of ${rows.length} done`;
   state.prevStatus = Object.fromEntries(rows.map((x) => [x.id, x.status]));
-  const n = c.due.decisions.length; $("desk-count").hidden = !n; $("desk-count").textContent = n;
-  if ($("device").dataset.state === "idle") device("idle");
+  $("desk-count").hidden = !n; $("desk-count").textContent = n;
+  if (state.devState === "idle") device("idle");
   $("chain").className = "chip " + (c.chain_ok ? "done" : "bad"); $("chain").innerHTML = `${icon(c.chain_ok ? "i-check" : "i-x")} chain ${c.chain_ok ? "intact" : "BROKEN"} · ${c.progress.receipts} receipts`;
   renderReceipts();
   if (c.progress.share) $("share-link").href = c.progress.share;
@@ -428,13 +463,6 @@ $("edit-labels").addEventListener("click", () => {
 $("labels-cancel").addEventListener("click", () => $("labels-dlg").close());
 $("labels-dlg").querySelector("form").addEventListener("submit", async () => { const body = {}; $("labels").querySelectorAll("input[data-task]").forEach((i) => (body[i.dataset.task] = i.value)); await fetch(`/api/cases/${state.caseId}/labels`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); toast("Names saved (cards only)."); refresh(); });
 
-// ---------- the device tilts toward the pointer ----------
-const stage = $("stage"), dev = $("device");
-if (!reduced) {
-  stage.addEventListener("pointermove", (e) => { const b = stage.getBoundingClientRect(); const px = (e.clientX - b.left) / b.width - 0.5, py = (e.clientY - b.top) / b.height - 0.5; dev.style.setProperty("--ry", `${(px * 12).toFixed(2)}deg`); dev.style.setProperty("--rx", `${(-py * 9).toFixed(2)}deg`); dev.style.setProperty("--gl", Math.abs(px).toFixed(2)); });
-  stage.addEventListener("pointerleave", () => { dev.style.setProperty("--ry", "0deg"); dev.style.setProperty("--rx", "0deg"); dev.style.setProperty("--gl", "0"); });
-}
-
 // ---------- pages, theme, keys, toast ----------
 function go(view) {
   state.view = view; document.querySelectorAll(".view").forEach((v) => (v.hidden = v.dataset.view !== view)); document.querySelectorAll(".tabs a").forEach((a) => a.classList.toggle("on", a.dataset.view === view));
@@ -445,14 +473,13 @@ function go(view) {
   if (view === "how") countStats();
 }
 window.addEventListener("hashchange", () => go(location.hash.slice(1) || "echo"));
-$("theme").addEventListener("click", () => { const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); const next = cur === "light" ? "dark" : "light"; document.documentElement.dataset.theme = next; try { localStorage.setItem("ald-theme", next); } catch {} $("theme").innerHTML = icon(next === "light" ? "i-moon" : "i-sun"); });
+$("theme").addEventListener("click", () => { const cur = document.documentElement.dataset.theme || "light"; const next = cur === "light" ? "dark" : "light"; document.documentElement.dataset.theme = next; try { localStorage.setItem("ald-theme2", next); } catch {} $("theme").innerHTML = icon(next === "light" ? "i-moon" : "i-sun"); });
+if (document.documentElement.dataset.theme === "dark") $("theme").innerHTML = icon("i-sun");
 document.addEventListener("keydown", (e) => { if (e.target.closest("input,textarea") || e.metaKey || e.ctrlKey) return; const k = e.key.toLowerCase(); if (k === "n") advance(1); else if (k === "w") advance(7); else if (k === "1") go("echo"); else if (k === "2") go("desk"); else if (k === "3") go("record"); else if (k === "4") go("how"); else if (k === "a" && state.view === "desk" && state.lastDecision) { const t = state.snapshot?.due.decisions[state.deskIndex]; if (t) confirmStep(t.id, { title: t.summary }); } });
 let toastTimer; function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("on"), 2800); }
 
 // ---------- boot: the device powers on, then the page waits for you ----------
 odometer(0);
 go(location.hash.slice(1) || "echo");
-if (!reduced) import("/orbit3d.js").then(({ mountOrbit }) => mountOrbit($("scene"))).then((o) => { orbit = o; if (!orbit) return; if (state.snapshot) { orbit.setNodes(state.snapshot.ledger.rows); device($("device").dataset.state); } else orbit.setNodes(GHOSTS); }).catch(() => {});
-const GHOSTS = ["ssa_report", "will_deliver", "certificates_order", "bureau_equifax", "bank_notify", "pension_notify", "insurance_claim", "utilities_notify", "subscription_cancel", "vehicle_reg5"].map((id) => ({ id: "ghost_" + id, status: "ghost", label: null }));
-setTimeout(() => $("scene").classList.add("boot"), 200); setTimeout(() => $("scene").classList.remove("boot"), 1600);
+document.addEventListener("click", (e) => { if (e.target.closest("#play-inline")) playStory(); });
 ensureInit().then(() => { if (state.caseId) call("whats_due", { case_id: state.caseId }); }).catch(() => {});

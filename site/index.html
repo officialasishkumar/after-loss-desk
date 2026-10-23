@@ -2,8 +2,8 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>After Loss Desk</title>
 <meta name="description" content="The executor's desk on the Echo: who to tell, by when, with what. An Alexa+ add-on that asks only at five gates.">
-<script>try{var t=localStorage.getItem("ald-theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
-<link rel="stylesheet" href="/tokens.css"><link rel="stylesheet" href="/style.css">
+<script>try{var t=localStorage.getItem("ald-theme2");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="/tokens.css?v=20"><link rel="stylesheet" href="/style.css?v=20">
 <link rel="icon" href="/favicon.svg">
 </head><body>
 <svg style="display:none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -23,6 +23,20 @@
   <symbol id="i-open" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2.5"/></symbol>
   <symbol id="i-tri" viewBox="0 0 24 24"><path d="M12 4l9 16H3z" fill="currentColor"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></symbol>
+  <symbol id="c-bank" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v9M9 10v9M15 10v9M19 10v9M3 19h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="c-pension" viewBox="0 0 24 24"><path d="M3 13a9 9 0 0118 0zM12 13v6a2 2 0 004 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="c-court" viewBox="0 0 24 24"><path d="M12 3v18M6 21h12M12 6l-6 2M12 6l6 2M3 14l3-6 3 6a3 3 0 01-6 0zM15 14l3-6 3 6a3 3 0 01-6 0z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="c-clerk" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 13l-2 8 5-3 5 3-2-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="c-bureau" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="c-insurer" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="c-utility" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="c-phone" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 18h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="c-gym" viewBox="0 0 24 24"><path d="M3 10v4M6 8v8M18 8v8M21 10v4M6 12h12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="c-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 10h20M6 15h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="c-dmv" viewBox="0 0 24 24"><path d="M5 16l1.5-5h11L19 16M3 16h18v3H3zM7 19v2M17 19v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="c-ssa" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="11" r="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 16c1-2 5-2 6 0M14 10h4M14 14h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="c-employer" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 7V5h6v2M3 12h18" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="c-other" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
   <symbol id="i-hand" viewBox="0 0 24 24"><path d="M7 11V6.5a1.5 1.5 0 013 0V11m0-6.5a1.5 1.5 0 013 0V11m0-4.5a1.5 1.5 0 013 0V13l1.8-1.6a1.6 1.6 0 012.2 2.3L16 19.5A5 5 0 0111.5 22H10a5 5 0 01-5-5v-4.5a1.5 1.5 0 013 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </svg>
 
@@ -34,45 +48,45 @@
   <div class="top-right">
     <span class="conn" id="conn"><i></i><span>Connecting</span></span>
     <span class="clock" id="clock" title="The case clock. Replies arrive and notices go out as days pass."><span class="mono" id="today">–</span><span class="clock-sub" id="since">no case yet</span></span>
-    <button type="button" class="ghost icon-btn" id="theme" aria-label="Switch theme" title="Switch theme"><svg class="icon"><use href="#i-sun"/></svg></button>
+    <button type="button" class="ghost icon-btn" id="theme" aria-label="Switch theme" title="Switch theme"><svg class="icon"><use href="#i-moon"/></svg></button>
   </div>
 </header>
 
 <main>
 <!-- ============ ECHO ============ -->
 <section id="view-echo" class="view" data-view="echo">
-  <div class="scene" id="scene" data-state="idle">
-    <div class="scene-top">
-      <h1 class="scene-h">Say what happened once.</h1>
-      <button type="button" class="play" id="play"><span class="play-ring"><svg class="icon"><use href="#i-play"/></svg></span><span class="play-l"><b>Watch the first week</b><small>Live against the server</small></span></button>
-    </div>
-    <div class="scene-stage">
-      <div class="stage" id="stage"><div class="device-wrap"><div class="device" id="device" data-state="idle">
-        <div class="glass" aria-hidden="true"></div>
-        <div class="plate">
-          <div class="plate-top"><span class="plate-time mono" id="plate-time">–</span><span class="plate-chip" id="plate-chip">After Loss Desk</span></div>
-          <div class="card" id="card" aria-live="polite"><h1>Who do I tell, and by when?</h1><p class="sub">No names, no account numbers. Just what happened.</p><button type="button" class="act" data-say="My husband died last week. There is a will. He had a bank account, a pension, life insurance, the power bill, a gym and a car.">Start with the sample sentence</button></div>
-          <div class="alexa-confirm" id="alexa-confirm" hidden><b>Alexa+ confirms the payment with you.</b><span>Instrument and PIN stay with Alexa.</span><em>“Yes, place the order.”</em></div>
-          <div class="lightbar" aria-hidden="true"><i></i></div>
-        </div>
-      </div></div><div class="shadow" aria-hidden="true"></div></div>
+  <div class="screen" id="scene" data-state="idle">
+    <div class="amb" aria-hidden="true"><i></i><i></i><i></i></div>
+    <header class="screen-top"><span class="mono" id="plate-time">–</span><span class="screen-brand"><svg class="icon"><use href="#i-ring"/></svg><span>After Loss Desk</span><span class="screen-chip" id="plate-chip">ready</span></span><span id="screen-status">no case yet</span></header>
+    <div class="screen-body">
+      <div class="apl">
+        <div class="card" id="card" aria-live="polite"><h1>Say what happened once.</h1><p class="sub">No names, no account numbers. The desk works out who to tell, by when, and asks you only at five gates.</p><button type="button" class="act" data-say="My husband died last week. There is a will. He had a bank account, a pension, life insurance, the power bill, a gym and a car.">Start with the sample sentence</button><button type="button" class="act alt" id="play-inline">Or watch the first week</button></div>
+        <div class="alexa-confirm" id="alexa-confirm" hidden><b>Alexa+ confirms the payment with you.</b><span>Instrument and PIN stay with Alexa.</span><em>“Yes, place the order.”</em></div>
+      </div>
+      <div class="hubwrap">
+        <svg class="hub" id="hub" viewBox="0 0 640 560" role="img" aria-label="Who to tell, around the desk"></svg>
+        <p class="ring-key" aria-hidden="true"><span class="k-open">○ open</span><span class="k-wait">◐ notice out</span><span class="k-needs">◆ needs you</span><span class="k-done">✓ done</span></p>
+      </div>
     </div>
     <div class="subs">
       <div class="caption" id="caption" hidden><span class="caption-who">You</span><span class="caption-text" id="caption-text"></span><i class="caret" aria-hidden="true"></i></div>
       <p class="speak" id="speak" aria-live="polite"></p>
     </div>
     <div class="handoff" id="handoff" hidden></div>
-    <div class="dock">
-      <form id="ask" class="ask" autocomplete="off">
-        <button type="button" class="mic" id="mic" aria-label="Speak" title="Speak (Chrome)"><svg class="icon"><use href="#i-mic"/></svg></button>
-        <input id="utterance" placeholder="Talk to the desk" aria-label="Say something">
-        <button type="submit" class="primary">Say</button>
-        <button type="button" class="ghost icon-btn" id="mute" aria-label="Spoken replies on" title="Spoken replies"><svg class="icon"><use href="#i-sound"/></svg></button>
-      </form>
-      <div class="day-big"><span class="day-lab">Day</span><span class="odo" id="odo" aria-hidden="true"></span><span class="day-sub" id="day-sub">no case yet</span></div>
-      <div class="daybar-btns"><button type="button" class="ghost small" id="next-day" title="N">+1 day</button><button type="button" class="ghost small" id="next-week" title="W">+7 days</button><button type="button" class="ghost small" id="next-event">Next event</button></div>
-    </div>
-    <p class="ring-key" aria-hidden="true"><span class="k-open">● open</span><span class="k-wait">◐ notice out</span><span class="k-needs">◆ needs you</span><span class="k-done">✓ done</span></p>
+    <div class="lightbar" aria-hidden="true"><i></i></div>
+  </div>
+
+  <div class="dock">
+    <button type="button" class="play" id="play"><span class="play-ring"><svg class="icon"><use href="#i-play"/></svg></span><span class="play-l"><b>Watch the first week</b><small>Live against the server</small></span></button>
+    <form id="ask" class="ask" autocomplete="off">
+      <button type="button" class="mic" id="mic" aria-label="Speak" title="Speak (Chrome)"><svg class="icon"><use href="#i-mic"/></svg></button>
+      <input id="utterance" placeholder="Talk to the desk" aria-label="Say something">
+      <button type="submit" class="primary">Say</button>
+      <button type="button" class="ghost icon-btn" id="mute" aria-label="Spoken replies on" title="Spoken replies"><svg class="icon"><use href="#i-sound"/></svg></button>
+      <select id="voice" aria-label="Voice" title="Voice"></select>
+    </form>
+    <div class="day-big"><span class="day-lab">Day</span><span class="odo" id="odo" aria-hidden="true"></span><span class="day-sub" id="day-sub">no case yet</span></div>
+    <div class="daybar-btns"><button type="button" class="ghost small" id="next-day" title="N">+1 day</button><button type="button" class="ghost small" id="next-week" title="W">+7 days</button><button type="button" class="ghost small" id="next-event">Next event</button></div>
   </div>
 
   <details class="drawer" id="drawer">
@@ -195,5 +209,5 @@
 <footer class="foot"><span>After Loss Desk · Asish Kumar and Akash Kumar · MIT</span><span class="keys"><kbd>N</kbd> next day <kbd>W</kbd> +7 <kbd>1</kbd>–<kbd>4</kbd> pages <kbd>A</kbd> approve on the Desk</span></footer>
 <dialog id="labels-dlg"><form method="dialog" class="labels-form"><h3>Institution names</h3><p class="muted small">Shown on cards and letters. Never spoken.</p><div id="labels"></div><menu><button type="button" class="ghost" id="labels-cancel">Cancel</button><button type="submit" class="primary" id="labels-save">Save</button></menu></form></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script type="module" src="/app.js"></script>
+<script type="module" src="/app.js?v=20"></script>
 </body></html>

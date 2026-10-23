@@ -1,62 +1,56 @@
-/* After Loss Desk design tokens: "Linen & Slate" (23 Oct 2026).
-   Linen paper and slate ink by day; slate stone by night. The Echo plate is always dark, like a device in a room.
+/* After Loss Desk design tokens: "Dawn" (23 Oct 2026).
+   Daylight by default: a cool, pale sky, white cards, deep navy ink. The Echo's own screen carries a soft dawn gradient,
+   like the ambient wallpaper on an Echo Show. Night is the alternative, never the default.
    One meaning per colour, everywhere:
-     alexa (blue)    the assistant: its light bar, its words, its one action button
-     needs-you (amber) a gate: something only the executor may decide; always with the gate letter and a diamond
-     done (green)    finished, always with a check mark
-     waiting (grey)  sent, awaiting a reply, always with a half disc
-     sim (violet)    the simulated clock and the simulated client, and nothing else
-   Red is for broken things only (a broken receipt chain, a server error). A declined decision is never red.
-   Never colour alone: every state has a shape and a word. */
+     alexa (blue → cyan)  the assistant: its light bar, its words, its one action button
+     needs-you (amber)    a gate: something only the executor may decide; always with the gate letter and a diamond
+     done (green)         finished, always with a check mark
+     waiting (slate)      sent, awaiting a reply, always with a half disc
+     sim (violet)         the replay clock and the simulated client, and nothing else
+   Red is for broken things only. Never colour alone: every state has a shape and a word. */
 
-@font-face { font-family: "IBM Plex Sans"; font-style: normal; font-weight: 400 700; font-display: swap; src: url("fonts/ibm-plex-sans-var-latin.woff2") format("woff2"); }
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
 @font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/ibm-plex-mono-400-latin.woff2") format("woff2"); }
 @font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url("fonts/ibm-plex-mono-500-latin.woff2") format("woff2"); }
 
 :root {
-  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
-  /* night (default) */
-  --bg: #0f1419; --bg-2: #151c24; --panel: #1a222c; --panel-2: #202a35; --line: #2b3643; --line-2: #3a4756;
-  --ink: #edf1f5; --ink-2: #b9c3cf; --ink-3: #8a96a4;
-  --alexa: #3d8cff; --alexa-2: #74b0ff; --alexa-ink: #0b1220; --alexa-glow: rgba(61,140,255,.35);
+  /* day (default) */
+  --bg: #f3f6fc; --bg-2: #e9eef9; --panel: #ffffff; --panel-2: #f6f8fd; --line: #e1e7f3; --line-2: #c9d3e8;
+  --ink: #141a33; --ink-2: #4a5476; --ink-3: #7e89a8;
+  --alexa: #2f6bff; --alexa-2: #19c3e6; --alexa-ink: #ffffff; --alexa-glow: rgba(47,107,255,.22);
+  --needs: #e09a10; --needs-bg: rgba(224,154,16,.14); --needs-ink: #2b1c00;
+  --done: #17a96f; --done-bg: rgba(23,169,111,.14);
+  --wait: #8a94b3; --wait-bg: rgba(138,148,179,.16);
+  --sim: #7c5cff; --sim-bg: rgba(124,92,255,.14);
+  --bad: #e5484d; --bad-bg: rgba(229,72,77,.12);
+  --shadow: 0 24px 60px rgba(31,41,80,.14); --shadow-2: 0 6px 20px rgba(31,41,80,.10);
+  /* the Echo's screen */
+  --screen-bg: linear-gradient(160deg, #dbe8ff 0%, #efe9ff 48%, #ffe6d6 100%);
+  --blob-1: #b9d2ff; --blob-2: #dcccff; --blob-3: #ffd3bd; --blob-listen: #cdbcff; --blob-gate: #ffd58a;
+  --screen-ink: #141a33; --screen-ink-2: #4a5476; --screen-ink-3: #7e89a8; --screen-line: rgba(20,26,51,.12);
+  --glass: rgba(255,255,255,.72); --disc: #ffffff; --disc-ghost: rgba(255,255,255,.45);
+  --r: 20px; --r-2: 14px; --r-3: 999px;
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px; --s-7: 48px;
+  --t-fast: 120ms; --t: 220ms; --t-slow: 420ms; --dur-hold: 1100ms;
+  --fs-0: .8rem; --fs-1: .9rem; --fs-2: 1rem; --fs-3: 1.15rem; --fs-4: 1.45rem; --fs-5: 2rem; --fs-6: 2.6rem;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #0f1424; --bg-2: #141a2e; --panel: #1a2136; --panel-2: #202842; --line: #2b3450; --line-2: #3a4563;
+  --ink: #eef1f8; --ink-2: #b8c0d6; --ink-3: #8690ad;
+  --alexa: #4d82ff; --alexa-2: #2fd1f0; --alexa-ink: #0b1220; --alexa-glow: rgba(77,130,255,.35);
   --needs: #f0b429; --needs-bg: rgba(240,180,41,.14); --needs-ink: #1a1200;
   --done: #3ecf8e; --done-bg: rgba(62,207,142,.14);
   --wait: #93a1b1; --wait-bg: rgba(147,161,177,.14);
   --sim: #b48cff; --sim-bg: rgba(180,140,255,.14);
   --bad: #ff5c5c; --bad-bg: rgba(255,92,92,.14);
-  --plate: #05080c; --plate-2: #0b1118; --plate-ink: #f4f7fa; --plate-ink-2: #aab6c3; --plate-line: rgba(255,255,255,.12);
   --shadow: 0 18px 50px rgba(0,0,0,.45); --shadow-2: 0 6px 18px rgba(0,0,0,.3);
-  --r: 14px; --r-2: 10px; --r-3: 999px;
-  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px; --s-7: 48px;
-  --t-fast: 120ms; --t: 220ms; --t-slow: 420ms; --dur-hold: 1100ms;
-  --fs-0: .8rem; --fs-1: .9rem; --fs-2: 1rem; --fs-3: 1.15rem; --fs-4: 1.45rem; --fs-5: 2rem; --fs-6: 2.6rem;
+  --screen-bg: linear-gradient(160deg, #0b1230 0%, #1a1240 50%, #2a1530 100%);
+  --blob-1: #1b3d8c; --blob-2: #45288a; --blob-3: #6b3a2a; --blob-listen: #5b36b4; --blob-gate: #7a4a10;
+  --screen-ink: #f4f7fa; --screen-ink-2: #c2cbd6; --screen-ink-3: #8a96a4; --screen-line: rgba(255,255,255,.12);
+  --glass: rgba(14,18,36,.55); --disc: #1a2340; --disc-ghost: rgba(26,35,64,.6);
   color-scheme: dark;
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg: #f5f2ec; --bg-2: #ede9e1; --panel: #fffdf9; --panel-2: #f3efe7; --line: #ddd6ca; --line-2: #c9c0b1;
-    --ink: #1c2330; --ink-2: #4a5666; --ink-3: #74808f;
-    --alexa: #2a62d6; --alexa-2: #1f4fb3; --alexa-ink: #ffffff; --alexa-glow: rgba(42,98,214,.25);
-    --needs: #a86d00; --needs-bg: rgba(168,109,0,.12); --needs-ink: #1a1200;
-    --done: #1f8a52; --done-bg: rgba(31,138,82,.12);
-    --wait: #6b7786; --wait-bg: rgba(107,119,134,.12);
-    --sim: #6b3fd4; --sim-bg: rgba(107,63,212,.12);
-    --bad: #c0392b; --bad-bg: rgba(192,57,43,.12);
-    --shadow: 0 18px 50px rgba(40,30,10,.18); --shadow-2: 0 6px 18px rgba(40,30,10,.12);
-    color-scheme: light;
-  }
-}
-:root[data-theme="light"] {
-  --bg: #f5f2ec; --bg-2: #ede9e1; --panel: #fffdf9; --panel-2: #f3efe7; --line: #ddd6ca; --line-2: #c9c0b1;
-  --ink: #1c2330; --ink-2: #4a5666; --ink-3: #74808f;
-  --alexa: #2a62d6; --alexa-2: #1f4fb3; --alexa-ink: #ffffff; --alexa-glow: rgba(42,98,214,.25);
-  --needs: #a86d00; --needs-bg: rgba(168,109,0,.12); --needs-ink: #1a1200;
-  --done: #1f8a52; --done-bg: rgba(31,138,82,.12);
-  --wait: #6b7786; --wait-bg: rgba(107,119,134,.12);
-  --sim: #6b3fd4; --sim-bg: rgba(107,63,212,.12);
-  --bad: #c0392b; --bad-bg: rgba(192,57,43,.12);
-  --shadow: 0 18px 50px rgba(40,30,10,.18); --shadow-2: 0 6px 18px rgba(40,30,10,.12);
-  color-scheme: light;
 }
 @media (prefers-reduced-motion: reduce) { :root { --t-fast: 0ms; --t: 0ms; --t-slow: 0ms; } }
