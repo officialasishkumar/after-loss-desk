@@ -254,7 +254,11 @@ def decision_detail(case: dict[str, Any], decision_id: str) -> dict[str, Any] | 
     if not d:
         return None
     task = next(t for t in case["tasks"] if t["id"] == d["task_id"])
-    text = (task.get("last_draft") or drafts.draft(case, task))["text"] if d["gate"] != "D0" else d["detail"]
+    if d["gate"] == "D0":
+        routine = [t for t in case["tasks"] if t["action"] == "notify" and t["rule"] != "certificates_order"]
+        text = "Routine notices I will send with a copy of the certificate, and phone scripts I will prepare for you:\n" + "\n".join(f"- {t['title']}{' (' + t['label'] + ')' if t['label'] else ''}" for t in routine)
+    else:
+        text = (task.get("last_draft") or drafts.draft(case, task))["text"]
     return {"decision": d, "task": {"id": task["id"], "title": task["title"], "label": task["label"], "channel": task["channel"], "deadline": task["deadline"],
                                     "deadline_kind": task["deadline_kind"], "days_left": _days_left(task, case["today"]), "needs_original": task["needs_original"],
                                     "legal": task["legal"], "source": task["source"], "history": task["history"][-3:]},

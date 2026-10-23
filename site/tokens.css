@@ -1,0 +1,62 @@
+/* After Loss Desk design tokens: "Linen & Slate" (23 Oct 2026).
+   Linen paper and slate ink by day; slate stone by night. The Echo plate is always dark, like a device in a room.
+   One meaning per colour, everywhere:
+     alexa (blue)    the assistant: its light bar, its words, its one action button
+     needs-you (amber) a gate: something only the executor may decide; always with the gate letter and a diamond
+     done (green)    finished, always with a check mark
+     waiting (grey)  sent, awaiting a reply, always with a half disc
+     sim (violet)    the simulated clock and the simulated client, and nothing else
+   Red is for broken things only (a broken receipt chain, a server error). A declined decision is never red.
+   Never colour alone: every state has a shape and a word. */
+
+@font-face { font-family: "IBM Plex Sans"; font-style: normal; font-weight: 400 700; font-display: swap; src: url("fonts/ibm-plex-sans-var-latin.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/ibm-plex-mono-400-latin.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url("fonts/ibm-plex-mono-500-latin.woff2") format("woff2"); }
+
+:root {
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  /* night (default) */
+  --bg: #0f1419; --bg-2: #151c24; --panel: #1a222c; --panel-2: #202a35; --line: #2b3643; --line-2: #3a4756;
+  --ink: #edf1f5; --ink-2: #b9c3cf; --ink-3: #8a96a4;
+  --alexa: #3d8cff; --alexa-2: #74b0ff; --alexa-ink: #0b1220; --alexa-glow: rgba(61,140,255,.35);
+  --needs: #f0b429; --needs-bg: rgba(240,180,41,.14); --needs-ink: #1a1200;
+  --done: #3ecf8e; --done-bg: rgba(62,207,142,.14);
+  --wait: #93a1b1; --wait-bg: rgba(147,161,177,.14);
+  --sim: #b48cff; --sim-bg: rgba(180,140,255,.14);
+  --bad: #ff5c5c; --bad-bg: rgba(255,92,92,.14);
+  --plate: #05080c; --plate-2: #0b1118; --plate-ink: #f4f7fa; --plate-ink-2: #aab6c3; --plate-line: rgba(255,255,255,.12);
+  --shadow: 0 18px 50px rgba(0,0,0,.45); --shadow-2: 0 6px 18px rgba(0,0,0,.3);
+  --r: 14px; --r-2: 10px; --r-3: 999px;
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px; --s-7: 48px;
+  --t-fast: 120ms; --t: 220ms; --t-slow: 420ms; --dur-hold: 1100ms;
+  --fs-0: .8rem; --fs-1: .9rem; --fs-2: 1rem; --fs-3: 1.15rem; --fs-4: 1.45rem; --fs-5: 2rem; --fs-6: 2.6rem;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f5f2ec; --bg-2: #ede9e1; --panel: #fffdf9; --panel-2: #f3efe7; --line: #ddd6ca; --line-2: #c9c0b1;
+    --ink: #1c2330; --ink-2: #4a5666; --ink-3: #74808f;
+    --alexa: #2a62d6; --alexa-2: #1f4fb3; --alexa-ink: #ffffff; --alexa-glow: rgba(42,98,214,.25);
+    --needs: #a86d00; --needs-bg: rgba(168,109,0,.12); --needs-ink: #1a1200;
+    --done: #1f8a52; --done-bg: rgba(31,138,82,.12);
+    --wait: #6b7786; --wait-bg: rgba(107,119,134,.12);
+    --sim: #6b3fd4; --sim-bg: rgba(107,63,212,.12);
+    --bad: #c0392b; --bad-bg: rgba(192,57,43,.12);
+    --shadow: 0 18px 50px rgba(40,30,10,.18); --shadow-2: 0 6px 18px rgba(40,30,10,.12);
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f5f2ec; --bg-2: #ede9e1; --panel: #fffdf9; --panel-2: #f3efe7; --line: #ddd6ca; --line-2: #c9c0b1;
+  --ink: #1c2330; --ink-2: #4a5666; --ink-3: #74808f;
+  --alexa: #2a62d6; --alexa-2: #1f4fb3; --alexa-ink: #ffffff; --alexa-glow: rgba(42,98,214,.25);
+  --needs: #a86d00; --needs-bg: rgba(168,109,0,.12); --needs-ink: #1a1200;
+  --done: #1f8a52; --done-bg: rgba(31,138,82,.12);
+  --wait: #6b7786; --wait-bg: rgba(107,119,134,.12);
+  --sim: #6b3fd4; --sim-bg: rgba(107,63,212,.12);
+  --bad: #c0392b; --bad-bg: rgba(192,57,43,.12);
+  --shadow: 0 18px 50px rgba(40,30,10,.18); --shadow-2: 0 6px 18px rgba(40,30,10,.12);
+  color-scheme: light;
+}
+@media (prefers-reduced-motion: reduce) { :root { --t-fast: 0ms; --t: 0ms; --t-slow: 0ms; } }
