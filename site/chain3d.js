@@ -15,19 +15,19 @@ export async function mountChain(container, receipts, chainOk, onHover) {
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(W, H);
   container.appendChild(renderer.domElement);
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(38, W / H, 0.1, 200);
+  const camera = new THREE.PerspectiveCamera(32, W / H, 0.1, 400);
   const group = new THREE.Group(); scene.add(group);
   scene.add(new THREE.AmbientLight(0xffffff, 0.75));
   const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(4, 8, 6); scene.add(key);
   const rim = new THREE.DirectionalLight(0x3d8cff, 0.6); rim.position.set(-6, 2, -4); scene.add(rim);
   const COLOR = { alexa: 0x3d8cff, agent: 0x8a96a4, executor: 0x3ecf8e, institution: 0xb9c3cf, heir: 0xf0b429 };
-  const n = receipts.length; const step = 0.9; const radius = 3.2 + n * 0.02;
+  const n = receipts.length; const step = 0.9; const radius = 3.2 + n * 0.03;
   const pts = []; const meshes = [];
   receipts.forEach((r, i) => {
     const a = i * 0.42; const x = Math.cos(a) * radius; const z = Math.sin(a) * radius; const y = (i - n / 2) * (step * 0.32);
     const isGate = r.action === "raise" || r.action === "objection"; const isExec = r.action.startsWith("execute:");
     const col = isGate ? 0xf0b429 : r.action === "approve" ? 0x3ecf8e : isExec ? 0x3d8cff : (COLOR[r.actor] ?? 0x8a96a4);
-    const geo = isGate ? new THREE.OctahedronGeometry(0.42) : new THREE.BoxGeometry(0.6, 0.6, 0.6);
+    const geo = isGate ? new THREE.OctahedronGeometry(0.36) : new THREE.BoxGeometry(0.5, 0.5, 0.5);
     const mat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.35, metalness: 0.15, emissive: col, emissiveIntensity: i === n - 1 ? 0.5 : 0.08 });
     const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.userData = r; group.add(m); meshes.push(m); pts.push(m.position.clone());
   });
@@ -35,7 +35,7 @@ export async function mountChain(container, receipts, chainOk, onHover) {
     const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: chainOk ? 0x3ecf8e : 0xff5c5c, transparent: true, opacity: 0.7 }));
     group.add(line);
   }
-  const span = Math.max(4, n * step * 0.32); camera.position.set(0, span * 0.35, radius * 2.6 + 2); camera.lookAt(0, 0, 0);
+  const span = Math.max(4, n * step * 0.32); const dist = Math.max(radius * 3.4 + 4, span * 1.6); camera.position.set(0, span * 0.45, dist); camera.lookAt(0, 0, 0);
   let rotY = 0.2, rotX = 0.15, targetY = rotY, drag = null, zoom = 1;
   const el = renderer.domElement; el.style.cursor = "grab"; el.style.touchAction = "none";
   el.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY, ry: targetY, rx: rotX }; el.style.cursor = "grabbing"; });
@@ -50,7 +50,7 @@ export async function mountChain(container, receipts, chainOk, onHover) {
     const t = (performance.now() - t0) / 1000;
     if (!drag) targetY += 0.0025;
     rotY += (targetY - rotY) * 0.08; group.rotation.set(rotX, rotY, 0);
-    camera.position.z = (radius * 2.6 + 2) * zoom; camera.lookAt(0, 0, 0);
+    camera.position.z = dist * zoom; camera.lookAt(0, 0, 0);
     if (meshes.length) { const last = meshes[meshes.length - 1]; last.material.emissiveIntensity = 0.35 + 0.3 * Math.sin(t * 3); last.rotation.y = t; }
     ray.setFromCamera(mouse, camera); const hit = ray.intersectObjects(meshes)[0]?.object || null;
     if (hit !== hovered) { if (hovered) hovered.scale.setScalar(1); hovered = hit; if (hovered) hovered.scale.setScalar(1.35); onHover?.(hovered ? hovered.userData : null); }

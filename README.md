@@ -22,7 +22,7 @@ The Echo: the card the executor sees across the room and the words she hears, wi
 
 ![The pitch: the executor is alone with 500 hours of paperwork; the desk isn't](docs/img/pitch-1440.jpg)
 
-Animated walk of an earlier build: [docs/demo.gif](docs/demo.gif).
+Animated walk (start a case, allow routine notices, order copies through the checkout handoff, a week passes, a decision on the Desk, the record): [docs/demo.gif](docs/demo.gif).
 
 - **Try it:** `uv run afterloss serve` → http://127.0.0.1:8300. Four pages: **Echo** (the card and the voice, a 3D device that tilts to the pointer, the day bar), **Desk** (check before you approve, hold to approve, decline with a reason, the receipt), **Record** (every receipt, as a list and as a WebGL chain), **How it works** (the pitch, the architecture, the live scoreboard). The page is a real MCP client standing in for Alexa+ and says so in its frame strip. MCP endpoint: `/mcp`. Agent Skill: [SKILL.md](SKILL.md). MCP App card: `ui://afterloss/card.html`.
 - **Design:** one meaning per colour, never colour alone (every state has a shape and a word), IBM Plex self-hosted, light and dark, keyboard shortcuts, reduced-motion respected. Tokens in `site/tokens.css`.
