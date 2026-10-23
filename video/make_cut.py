@@ -23,7 +23,7 @@ for line in lines:
     after = line.get("after", 0.0)
     if "at" in line:
         after = max(0.0, story.get(line["at"], 0.0) - 0.2)
-    cut_lines.append({"id": line["id"], "shot": i, "after": round(after, 2), "text": line["text"]})
+    cut_lines.append({"id": line["id"], "shot": i, "after": round(after, 2), "text": line["text"], "sub": line.get("sub", line["text"])})
 cut = {"title": "After Loss Desk, the three-minute video", "voice": voice, "music": {"src": "score-ambient.wav", "gain": -17}, "crossfade": 0.5, "shots": shots, "lines": cut_lines}
 out.write_text(json.dumps(cut, indent=2))
 print(f"wrote {out}: {len(shots)} shots, {len(cut_lines)} lines; story chapters at", {k: v for k, v in story.items() if k != "caseId"})
