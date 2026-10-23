@@ -22,6 +22,7 @@
   <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="currentColor"/></symbol>
   <symbol id="i-open" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2.5"/></symbol>
   <symbol id="i-tri" viewBox="0 0 24 24"><path d="M12 4l9 16H3z" fill="currentColor"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></symbol>
   <symbol id="i-hand" viewBox="0 0 24 24"><path d="M7 11V6.5a1.5 1.5 0 013 0V11m0-6.5a1.5 1.5 0 013 0V11m0-4.5a1.5 1.5 0 013 0V13l1.8-1.6a1.6 1.6 0 012.2 2.3L16 19.5A5 5 0 0111.5 22H10a5 5 0 01-5-5v-4.5a1.5 1.5 0 013 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </svg>
 
@@ -36,21 +37,39 @@
     <button type="button" class="ghost icon-btn" id="theme" aria-label="Switch theme" title="Switch theme"><svg class="icon"><use href="#i-sun"/></svg></button>
   </div>
 </header>
-<div class="frame-strip" role="note"><svg class="icon" aria-hidden="true"><use href="#i-open"/></svg><b>Simulated Alexa+</b><span>This page is a real MCP client (initialize, tools/list, tools/call over Streamable HTTP) standing in for Alexa+, which is in preview for select partners. It speaks the add-on's <code>speak</code> field and renders its <code>card</code>. No name or account number is ever spoken.</span></div>
 
 <main>
 <!-- ============ ECHO ============ -->
 <section id="view-echo" class="view" data-view="echo">
-  <div class="echo-grid">
-    <div class="echo-col">
-      <div class="stage" id="stage"><div class="device" id="device" data-state="idle">
+  <div class="scene" id="scene" data-state="idle" data-chapter="">
+    <div class="scene-copy">
+      <h1 class="scene-h"><span>Say what happened</span> <span>once.</span></h1>
+      <p class="scene-p">The desk works out who has to be told and by when, sends the routine notices with certified copies, chases silence for months, and asks you only at five gates: money, an original, a signature, anything that cannot be undone, an heir who objects.</p>
+      <div class="scene-cta">
+        <button type="button" class="play" id="play"><span class="play-ring"><svg class="icon"><use href="#i-play"/></svg></span><span class="play-l"><b>Watch the first week</b><small>About a minute, live against the server</small></span></button>
+        <button type="button" class="ghost" id="say-yourself">Say it yourself</button>
+      </div>
+      <ol class="chapters" id="chapters" aria-label="The story, in order">
+        <li data-ch="tell"><i></i><span>You say what happened</span></li>
+        <li data-ch="list"><i></i><span>The desk makes the list</span></li>
+        <li data-ch="allow"><i></i><span>One yes covers the routine</span></li>
+        <li data-ch="order"><i></i><span>Copies, through Alexa+ checkout</span></li>
+        <li data-ch="week"><i></i><span>A week passes. Replies land.</span></li>
+        <li data-ch="gate"><i></i><span>A gate. This one is yours.</span></li>
+      </ol>
+    </div>
+    <div class="scene-stage">
+      <div class="room-glow" aria-hidden="true"></div>
+      <div class="stage" id="stage"><div class="device-wrap"><div class="device" id="device" data-state="idle">
         <div class="glass" aria-hidden="true"></div>
         <div class="plate">
           <div class="plate-top"><span class="plate-time mono" id="plate-time">–</span><span class="plate-chip" id="plate-chip">After Loss Desk</span></div>
-          <div class="card" id="card" aria-live="polite"><h1>Say what happened.</h1><p class="sub">"My husband died last week. There is a will. He had a bank account, a pension, life insurance, the power bill, a gym and a car."</p><button type="button" class="act" data-say="My husband died last week. There is a will. He had a bank account, a pension, life insurance, the power bill, a gym and a car.">Start with that</button></div>
+          <div class="card" id="card" aria-live="polite"><h1>Who do I tell, and by when?</h1><p class="sub">Start with what happened. No names, no account numbers: the desk never needs them by voice.</p><button type="button" class="act" data-say="My husband died last week. There is a will. He had a bank account, a pension, life insurance, the power bill, a gym and a car.">Start with the sample sentence</button></div>
+          <div class="alexa-confirm" id="alexa-confirm" hidden><b>Alexa+ confirms the payment with you.</b><span>Instrument and PIN stay with Alexa, never with the add-on.</span><em>“Yes, place the order.”</em></div>
           <div class="lightbar" aria-hidden="true"><i></i></div>
         </div>
-      </div><div class="stand" aria-hidden="true"></div><div class="shadow" aria-hidden="true"></div></div>
+      </div></div><div class="shadow" aria-hidden="true"></div></div>
+      <div class="caption" id="caption" hidden><span class="caption-who">You</span><span class="caption-text" id="caption-text"></span><i class="caret" aria-hidden="true"></i></div>
       <p class="speak" id="speak" aria-live="polite"></p>
       <form id="ask" class="ask" autocomplete="off">
         <button type="button" class="mic" id="mic" aria-label="Speak" title="Speak (Chrome)"><svg class="icon"><use href="#i-mic"/></svg></button>
@@ -66,88 +85,122 @@
         <button type="button" data-say="Read me the bank letter">Read the bank letter</button>
         <button type="button" data-say="How far along are we?">Progress</button>
       </div>
+      <div class="handoff" id="handoff" hidden></div>
     </div>
-    <aside class="story-col">
-      <section class="panel">
-        <header class="panel-h"><h2>What happened</h2><span class="muted" id="story-n"></span></header>
-        <ol class="story" id="story"><li class="muted">Nothing yet. Start a case on the Echo.</li></ol>
-      </section>
-      <section class="panel">
-        <header class="panel-h"><h2>Who to tell</h2><span class="muted" id="ledger-n"></span></header>
-        <div class="legend"><span><svg class="icon"><use href="#i-open"/></svg>open</span><span class="wait"><svg class="icon"><use href="#i-half"/></svg>waiting</span><span class="needs"><svg class="icon"><use href="#i-diamond"/></svg>needs you</span><span class="done"><svg class="icon"><use href="#i-check"/></svg>done</span></div>
-        <ul class="ledger" id="ledger"></ul>
-        <p class="fine">Institution names are typed here and shown on cards. They are never spoken. <button type="button" class="link" id="edit-labels">Edit names</button></p>
-      </section>
-    </aside>
   </div>
-  <section class="daybar" id="daybar" aria-label="The case, day by day">
-    <div class="daybar-h"><span class="eyebrow">The case, day by day</span><span class="legend small"><span><svg class="icon"><use href="#i-tri"/></svg>deadline</span><span class="wait"><svg class="icon"><use href="#i-dot"/></svg>reply</span><span class="needs"><svg class="icon"><use href="#i-diamond"/></svg>gate</span><span class="sim"><svg class="icon"><use href="#i-dot"/></svg>today</span></span>
-      <span class="daybar-btns"><button type="button" class="ghost small" id="next-day" title="N">Next day</button><button type="button" class="ghost small" id="next-week" title="W">+7</button><button type="button" class="ghost small" id="next-event">Jump to next event</button></span></div>
-    <div class="track" id="track"></div>
+
+  <section class="dayrow" id="daybar" aria-label="The case, day by day">
+    <div class="day-big"><span class="day-lab">Day</span><span class="odo" id="odo" aria-hidden="true"></span><span class="day-sub" id="day-sub">no case yet</span></div>
+    <div class="track-wrap">
+      <div class="daybar-h"><span class="legend small"><span><svg class="icon"><use href="#i-tri"/></svg>deadline</span><span class="wait"><svg class="icon"><use href="#i-dot"/></svg>reply</span><span class="needs"><svg class="icon"><use href="#i-diamond"/></svg>gate</span><span class="sim"><svg class="icon"><use href="#i-dot"/></svg>today</span></span>
+        <span class="daybar-btns"><button type="button" class="ghost small" id="next-day" title="N">Next day</button><button type="button" class="ghost small" id="next-week" title="W">+7 days</button><button type="button" class="ghost small" id="next-event">Jump to the next event</button></span></div>
+      <div class="track" id="track"><p class="fine">The bar fills once a case starts: deadlines above the rail, replies and decisions below, today in violet.</p></div>
+    </div>
   </section>
+
+  <div class="below">
+    <section class="panel wall-panel">
+      <header class="panel-h"><h2>Who to tell</h2><span class="muted" id="ledger-n"></span></header>
+      <div class="legend"><span><svg class="icon"><use href="#i-open"/></svg>open</span><span class="wait"><svg class="icon"><use href="#i-half"/></svg>waiting on a reply</span><span class="needs"><svg class="icon"><use href="#i-diamond"/></svg>needs you</span><span class="done"><svg class="icon"><use href="#i-check"/></svg>done</span></div>
+      <ul class="wall" id="ledger"><li class="empty muted">The wall fills when a case starts: one tile per institution, flipping as notices go out and replies come back.</li></ul>
+      <p class="fine">Institution names are typed here and shown on cards. They are never spoken. <button type="button" class="link" id="edit-labels">Edit names</button></p>
+    </section>
+    <section class="panel">
+      <header class="panel-h"><h2>What happened</h2><span class="muted" id="story-n"></span></header>
+      <ol class="story" id="story"><li class="muted">Nothing yet. Every MCP call, reply and decision lands here.</li></ol>
+    </section>
+  </div>
 </section>
 
 <!-- ============ DESK ============ -->
 <section id="view-desk" class="view" data-view="desk" hidden>
-  <div class="desk">
-    <header class="desk-h"><span class="eyebrow">Decide</span><span id="desk-pos" class="muted">nothing waiting</span><button type="button" class="link" id="desk-skip">Skip for now</button></header>
-    <div id="desk-body" class="desk-body"><p class="muted center">Nothing needs you. The desk fills when a gate is reached: money, an original, a signature, a closure, or an objection.</p></div>
+  <div class="desk-page">
+    <header class="page-h"><h1>Decide</h1><p class="page-p" id="desk-pos">nothing waiting</p></header>
+    <div class="desk-grid">
+      <aside class="queue-col">
+        <h2 class="col-h">Waiting on you</h2>
+        <ol class="queue" id="desk-queue"><li class="muted empty">Nothing yet.</li></ol>
+        <button type="button" class="link small" id="desk-skip">Skip for now</button>
+        <h2 class="col-h decided-h">Written down lately</h2>
+        <ol class="decided" id="desk-decided"></ol>
+      </aside>
+      <div class="dossier" id="desk-body"><div class="empty-desk"><svg class="icon big"><use href="#i-hand"/></svg><h3>Nothing needs you.</h3><p>The desk fills when a gate is reached: money leaving the estate, an original leaving your hands, your signature, anything that cannot be undone, an heir who objects. Everything else runs on the one authorisation you gave.</p><div class="desk-actions"><button type="button" class="primary" id="desk-week">Let a week pass</button><button type="button" class="ghost" id="desk-echo0">Back to the Echo</button></div></div></div>
+    </div>
   </div>
 </section>
 
 <!-- ============ RECORD ============ -->
 <section id="view-record" class="view" data-view="record" hidden>
   <div class="record">
-    <header class="panel-h"><h2>The record</h2><span id="chain" class="chip"></span></header>
-    <p class="muted">Every action the agent took, every reply, every decision: one receipt each, hash-chained. <a id="share-link" href="#" target="_blank" rel="noopener">The sibling's read-only page</a> shows statuses only.</p>
-    <div class="chain3d-wrap"><div class="chain3d" id="chain3d" hidden></div><p class="fine" id="chain3d-hover">Drag to orbit, wheel to zoom, hover a block for its receipt. Blocks are receipts in order; a diamond is a gate; the newest breathes.</p></div>
+    <header class="page-h"><h1>The record</h1><p class="page-p">Every action the agent took, every reply, every decision: one receipt each, each one hashed over the last. <a id="share-link" href="#" target="_blank" rel="noopener">The sibling's read-only page</a> shows statuses only.</p></header>
+    <div class="chain-bar"><span id="chain" class="chip"></span><button type="button" class="ghost small" id="verify">Verify the chain</button><span class="fine" id="chain3d-hover">Drag to orbit, pinch or ctrl+wheel to zoom, hover a block for its receipt. A cube is a receipt, a diamond is a gate, the newest breathes.</span></div>
+    <div class="chain3d-wrap"><div class="chain3d" id="chain3d" hidden></div><div class="chain-empty" id="chain-empty"><p>No case yet. Start one on the Echo; the chain grows one block per receipt.</p></div></div>
+    <div class="rec-filter" id="rec-filter" role="group" aria-label="Show"><button type="button" class="on" data-f="all">All</button><button type="button" data-f="gate">Gates</button><button type="button" data-f="decision">Decisions</button><button type="button" data-f="exec">Actions</button><button type="button" data-f="reply">Replies</button></div>
     <ol class="receipts" id="receipts"></ol>
   </div>
 </section>
 
 <!-- ============ HOW ============ -->
 <section id="view-how" class="view" data-view="how" hidden>
-  <div class="hero">
-    <p class="eyebrow">Build, Ship, Shape: Amazon Developer Hackathon 2026 · Alexa+ track</p>
-    <h1 class="hero-h">The executor is alone with 500 hours of paperwork. <span class="grad">The desk isn't.</span></h1>
-    <p class="hero-p">About 3.1 million Americans die a year. The person left to settle their affairs tells banks, insurers, pensions, utilities, credit bureaus and Social Security, chases replies, and buys certified copies again and again, for about eighteen months. Almost none of it needs judgement. It needs persistence, a list, and someone to ask at the five moments that are hers.</p>
-    <div class="hero-stats"><div><b>3.09M</b><span>deaths a year (CDC, 2025)</span></div><div><b>500 h</b><span>of admin per executor (Empathy, 2026)</span></div><div><b>18 mo</b><span>to wind down (Empathy, 2026)</span></div><div><b>15 of 27</b><span>asks kept, out of a confirm-everything 27</span></div></div>
-    <div class="gates3d" aria-label="The five gates">
-      <div class="g"><b>D1</b><span>money leaves the estate</span></div><div class="g"><b>D2</b><span>an original leaves her hands</span></div><div class="g"><b>D3</b><span>her signature or a visit</span></div><div class="g"><b>D4</b><span>anything irreversible</span></div><div class="g"><b>D5</b><span>an heir objects</span></div>
-    </div>
-    <p class="fine center">Everything else is clerical and runs on one standing authorisation, receipted.</p>
-  </div>
-  <div class="how">
-    <h2>Architecture</h2>
-    <svg class="arch" viewBox="0 0 960 330" role="img" aria-label="Architecture: Alexa+ calls MCP tools; the ledger engine, five-gate governor, drafts and checkout write to a hash-chained case store; a sibling reads a progress page">
-      <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5 0 10z" fill="currentColor"/></marker></defs>
-      <g class="box alexa"><rect x="20" y="120" width="170" height="90" rx="12"/><text x="105" y="155">Alexa+ / Echo</text><text x="105" y="178" class="sm">or the simulated client</text><text x="105" y="196" class="sm">speech in, speak + card out</text></g>
-      <g class="box"><rect x="250" y="120" width="190" height="90" rx="12"/><text x="345" y="155">MCP server</text><text x="345" y="178" class="sm">8 tools · spec 2025-11-25</text><text x="345" y="196" class="sm">Streamable HTTP · MCP App card</text></g>
-      <g class="box"><rect x="500" y="20" width="200" height="60" rx="12"/><text x="600" y="47">Ledger engine</text><text x="600" y="67" class="sm">rule table + date arithmetic</text></g>
-      <g class="box needs"><rect x="500" y="100" width="200" height="60" rx="12"/><text x="600" y="127">Five-gate governor</text><text x="600" y="147" class="sm">before every action · one card per gate</text></g>
-      <g class="box"><rect x="500" y="180" width="200" height="60" rx="12"/><text x="600" y="207">Drafts + adapters</text><text x="600" y="227" class="sm">templates filled by code · chases</text></g>
-      <g class="box alexa"><rect x="500" y="260" width="200" height="60" rx="12"/><text x="600" y="287">Alexa+ checkout</text><text x="600" y="307" class="sm">/checkout-sessions · Idempotency-Key</text></g>
-      <g class="box done"><rect x="760" y="100" width="180" height="100" rx="12"/><text x="850" y="135">Case store</text><text x="850" y="158" class="sm">SQLite · months of state</text><text x="850" y="178" class="sm">hash-chained receipts</text></g>
-      <g class="box"><rect x="760" y="240" width="180" height="60" rx="12"/><text x="850" y="267">Sibling's page</text><text x="850" y="287" class="sm">read-only statuses</text></g>
-      <g class="arrows"><path d="M190 165H250"/><path d="M440 150L500 60"/><path d="M440 160L500 130"/><path d="M440 170L500 205"/><path d="M440 180L500 285"/><path d="M700 50L760 120"/><path d="M700 130H760"/><path d="M700 210L760 180"/><path d="M700 290L760 180"/><path d="M850 200V240"/></g>
-    </svg>
-    <h2>How it works</h2>
-    <ol class="pipeline">
-      <li><span><b>Six answers by voice.</b> Relationship, state, will or not, which kinds of accounts. Closed lists, no names, no numbers.</span></li>
-      <li><span><b>The ledger, by code.</b> A rule table with a source per row turns those answers into who to tell and by when. Deadlines are date arithmetic from the date of death.</span></li>
-      <li><span><b>Routine work on one authorisation.</b> Notices with copies, phone scripts, chasing silence, certified-mail escalation. Drafts are templates with facts filled by code.</span></li>
-      <li><span><b>Five gates, before every action.</b> <span class="gate g1">D1 money</span> <span class="gate g2">D2 original</span> <span class="gate g3">D3 signature</span> <span class="gate g4">D4 irreversible</span> <span class="gate g5">D5 objection</span>. One card per task and gate. Nothing gated runs without an approved decision; the receipt chain is scanned for it.</span></li>
-      <li><span><b>Certified copies through Alexa+ checkout.</b> The add-on quotes; Alexa+ confirms, picks the instrument and takes the PIN; <code>Idempotency-Key</code> results are kept 24 h.</span></li>
-    </ol>
-    <section class="panel"><header class="panel-h"><h2>The measured claim</h2><button type="button" class="primary small" id="run-sim">Run the eight-week simulation</button></header>
-      <p class="muted">The synthetic Okafor estate, eight institutions, a will, a car a brother objects to. An executor who approves every decision the day it is raised. Scored against a ground truth written before the run.</p>
-      <table class="score" id="score"><tbody><tr><td class="muted">Not run yet in this session.</td></tr></tbody></table></section>
-    <section class="panel"><header class="panel-h"><h2>Policy, in code</h2></header>
+  <article class="how">
+    <header class="hero">
+      <p class="hero-kicker">Build, Ship, Shape: Amazon Developer Hackathon 2026, Alexa+ track</p>
+      <h1 class="hero-h">The executor is alone with five hundred hours of paperwork. The desk isn't.</h1>
+      <p class="hero-p">About 3.1 million Americans die a year. The person left to settle their affairs tells banks, insurers, pensions, utilities, credit bureaus and Social Security, chases replies, and buys certified copies again and again, for about eighteen months. Almost none of it needs judgement. It needs persistence, a list, and someone to ask at the five moments that are theirs.</p>
+      <dl class="hero-stats"><div><dt>deaths a year</dt><dd data-n="3.09" data-unit="M">3.09M</dd><span>CDC, 2025</span></div><div><dt>hours of admin per executor</dt><dd data-n="500">500</dd><span>Empathy, 2026</span></div><div><dt>months to wind down</dt><dd data-n="18">18</dd><span>Empathy, 2026</span></div><div><dt>asks kept, of a confirm-everything 27</dt><dd data-n="15">15</dd><span>eight-week simulation</span></div></dl>
+    </header>
+
+    <section class="how-sec">
+      <h2>Five gates, and nothing else</h2>
+      <p class="muted">Before every action the governor names the gate it would cross. Crossing one raises a card and stops. Everything else is clerical and runs on one standing authorisation, receipted.</p>
+      <div class="gates3d" aria-label="The five gates">
+        <div class="g"><b>D1</b><span>money leaves the estate</span></div><div class="g"><b>D2</b><span>an original leaves your hands</span></div><div class="g"><b>D3</b><span>your signature or a visit</span></div><div class="g"><b>D4</b><span>anything irreversible</span></div><div class="g"><b>D5</b><span>an heir objects</span></div>
+      </div>
+    </section>
+
+    <section class="how-sec">
+      <h2>How it works</h2>
+      <ol class="pipeline">
+        <li><span><b>Six answers by voice.</b> Relationship, state, will or not, which kinds of accounts. Closed lists, no names, no numbers.</span></li>
+        <li><span><b>The ledger, by code.</b> A rule table with a source per row turns those answers into who to tell and by when. Deadlines are date arithmetic from the date of death.</span></li>
+        <li><span><b>Routine work on one authorisation.</b> Notices with copies, phone scripts, chasing silence, certified-mail escalation. Drafts are templates with facts filled by code.</span></li>
+        <li><span><b>Five gates, before every action.</b> <span class="gate g1">D1 money</span> <span class="gate g2">D2 original</span> <span class="gate g3">D3 signature</span> <span class="gate g4">D4 irreversible</span> <span class="gate g5">D5 objection</span>. One card per task and gate. Nothing gated runs without an approved decision; the receipt chain is scanned for it.</span></li>
+        <li><span><b>Certified copies through Alexa+ checkout.</b> The add-on quotes; Alexa+ confirms, picks the instrument and takes the PIN; <code>Idempotency-Key</code> results are kept 24 h.</span></li>
+      </ol>
+    </section>
+
+    <section class="how-sec">
+      <h2>Architecture</h2>
+      <svg class="arch" viewBox="0 0 960 330" role="img" aria-label="Architecture: Alexa+ calls MCP tools; the ledger engine, five-gate governor, drafts and checkout write to a hash-chained case store; a sibling reads a progress page">
+        <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5 0 10z" fill="currentColor"/></marker></defs>
+        <g class="box alexa"><rect x="20" y="120" width="170" height="90" rx="12"/><text x="105" y="155">Alexa+ / Echo</text><text x="105" y="178" class="sm">or the simulated client</text><text x="105" y="196" class="sm">speech in, speak + card out</text></g>
+        <g class="box"><rect x="250" y="120" width="190" height="90" rx="12"/><text x="345" y="155">MCP server</text><text x="345" y="178" class="sm">8 tools · spec 2025-11-25</text><text x="345" y="196" class="sm">Streamable HTTP · MCP App card</text></g>
+        <g class="box"><rect x="500" y="20" width="200" height="60" rx="12"/><text x="600" y="47">Ledger engine</text><text x="600" y="67" class="sm">rule table + date arithmetic</text></g>
+        <g class="box needs"><rect x="500" y="100" width="200" height="60" rx="12"/><text x="600" y="127">Five-gate governor</text><text x="600" y="147" class="sm">before every action · one card per gate</text></g>
+        <g class="box"><rect x="500" y="180" width="200" height="60" rx="12"/><text x="600" y="207">Drafts + adapters</text><text x="600" y="227" class="sm">templates filled by code · chases</text></g>
+        <g class="box alexa"><rect x="500" y="260" width="200" height="60" rx="12"/><text x="600" y="287">Alexa+ checkout</text><text x="600" y="307" class="sm">/checkout-sessions · Idempotency-Key</text></g>
+        <g class="box done"><rect x="760" y="100" width="180" height="100" rx="12"/><text x="850" y="135">Case store</text><text x="850" y="158" class="sm">SQLite · months of state</text><text x="850" y="178" class="sm">hash-chained receipts</text></g>
+        <g class="box"><rect x="760" y="240" width="180" height="60" rx="12"/><text x="850" y="267">Sibling's page</text><text x="850" y="287" class="sm">read-only statuses</text></g>
+        <g class="arrows"><path d="M190 165H250"/><path d="M440 150L500 60"/><path d="M440 160L500 130"/><path d="M440 170L500 205"/><path d="M440 180L500 285"/><path d="M700 50L760 120"/><path d="M700 130H760"/><path d="M700 210L760 180"/><path d="M700 290L760 180"/><path d="M850 200V240"/></g>
+        <g class="flow"><path d="M190 165H250"/><path d="M440 160L500 130"/><path d="M700 130H760"/></g>
+      </svg>
+    </section>
+
+    <section class="how-sec">
+      <div class="sec-h"><h2>The measured claim</h2><button type="button" class="primary" id="run-sim">Run the eight-week simulation</button></div>
+      <p class="muted">The synthetic Okafor estate: eight institutions, a will, a car a brother objects to, and an executor who approves every decision the day it is raised. Scored against a ground truth written before the run. Runs here, now, against this server.</p>
+      <div class="score-wrap"><table class="score" id="score"><tbody><tr><td class="muted">Not run yet in this session.</td></tr></tbody></table></div>
+    </section>
+
+    <section class="how-sec">
+      <h2>Policy, in code</h2>
       <ul class="facts"><li><b>s.3</b> No private personal information by voice: closed enums, labels only on cards, a test that rejects digits and names in every spoken string.</li><li><b>s.9</b> Legal lines quote the statute and say "not legal advice".</li><li><b>s.13</b> The 988 Lifeline in the first reply; no life-safety claim anywhere.</li><li><b>s.14</b> Payment instrument, PIN and confirmation stay with Alexa+.</li></ul>
-      <p class="fine">MCP endpoint <code>/mcp</code> · spec 2025-11-25 · Streamable HTTP, stateless · MCP App <code>ui://afterloss/card.html</code> · Agent Skill <code>SKILL.md</code> · <a href="https://github.com/officialasishkumar/after-loss-desk" target="_blank" rel="noopener">source</a></p></section>
-  </div>
+      <p class="fine">MCP endpoint <code>/mcp</code> · spec 2025-11-25 · Streamable HTTP, stateless · MCP App <code>ui://afterloss/card.html</code> · Agent Skill <code>SKILL.md</code> · <a href="https://github.com/officialasishkumar/after-loss-desk" target="_blank" rel="noopener">source</a></p>
+    </section>
+  </article>
 </section>
 </main>
+<div class="sim-note" role="note"><svg class="icon" aria-hidden="true"><use href="#i-open"/></svg><b>Simulated Alexa+</b><span>This page is a real MCP client (initialize, tools/list, tools/call over Streamable HTTP) standing in for Alexa+, which is in preview for select partners. It speaks the add-on's <code>speak</code> field and renders its <code>card</code>. No name or account number is ever spoken.</span></div>
 <footer class="foot"><span>After Loss Desk · Asish Kumar and Akash Kumar · MIT</span><span class="keys"><kbd>N</kbd> next day <kbd>W</kbd> +7 <kbd>1</kbd>–<kbd>4</kbd> pages <kbd>A</kbd> approve on the Desk</span></footer>
 <dialog id="labels-dlg"><form method="dialog" class="labels-form"><h3>Institution names</h3><p class="muted small">Shown on cards and letters. Never spoken.</p><div id="labels"></div><menu><button type="button" class="ghost" id="labels-cancel">Cancel</button><button type="submit" class="primary" id="labels-save">Save</button></menu></form></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
