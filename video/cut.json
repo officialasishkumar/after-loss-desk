@@ -1,0 +1,128 @@
+{
+  "title": "After Loss Desk, the three-minute video",
+  "voice": "af_heart",
+  "music": {
+    "src": "score-ambient.wav",
+    "gain": -17
+  },
+  "crossfade": 0.5,
+  "shots": [
+    {
+      "src": "beats/title.mp4",
+      "captions": true
+    },
+    {
+      "src": "beats/problem.mp4",
+      "captions": true
+    },
+    {
+      "src": "beats/open.mp4"
+    },
+    {
+      "src": "beats/story.mp4"
+    },
+    {
+      "src": "beats/desk.mp4"
+    },
+    {
+      "src": "beats/record.mp4"
+    },
+    {
+      "src": "beats/gates.mp4",
+      "captions": true
+    },
+    {
+      "src": "beats/how.mp4"
+    },
+    {
+      "src": "beats/end.mp4",
+      "captions": true
+    }
+  ],
+  "lines": [
+    {
+      "id": "l01",
+      "shot": 0,
+      "after": 0.6,
+      "text": "After a death in the family, the person left in charge faces about five hundred hours of paperwork, spread over eighteen months."
+    },
+    {
+      "id": "l02",
+      "shot": 1,
+      "after": 0.4,
+      "text": "Banks, pensions, insurers, utilities, the credit bureaus, Social Security. Letters, calls, certified copies, chasing silence. Almost none of it needs judgement. It needs persistence, and someone to ask at the few moments that are hers."
+    },
+    {
+      "id": "l03",
+      "shot": 2,
+      "after": 0.3,
+      "text": "After Loss Desk is an Alexa plus add-on. The page you are watching is a real M C P client standing in for Alexa plus, talking to the add-on's server, live."
+    },
+    {
+      "id": "l04",
+      "shot": 3,
+      "after": 1.3,
+      "text": "She says what happened, once. No names, no account numbers."
+    },
+    {
+      "id": "l05",
+      "shot": 3,
+      "after": 6.5,
+      "text": "The desk builds the list from a cited rule table: fourteen institutions, one firm date from the probate code, and about seven certified copies."
+    },
+    {
+      "id": "l06",
+      "shot": 3,
+      "after": 16.06,
+      "text": "One yes covers the routine notices. A pulse runs out to each institution as its letter goes."
+    },
+    {
+      "id": "l07",
+      "shot": 3,
+      "after": 21.96,
+      "text": "Certified copies are bought through Alexa plus checkout. The payment instrument, the PIN and the confirmation stay with Alexa. The add-on's complete call is sent twice with the same idempotency key, and the second is replayed, not re-charged."
+    },
+    {
+      "id": "l08",
+      "shot": 3,
+      "after": 39.12,
+      "text": "A week passes on the replay clock. Replies land. Three of them cross a gate, so the desk stops and asks."
+    },
+    {
+      "id": "l09",
+      "shot": 3,
+      "after": 49.12,
+      "text": "This one is hers: money leaving the estate. She holds to approve, and it is written down."
+    },
+    {
+      "id": "l10",
+      "shot": 4,
+      "after": 0.4,
+      "text": "The Desk shows every waiting gate: the amount, the date, who wrote the text, and the rule with its source. Hold to approve. Or decline with a reason, and the desk leaves it with her."
+    },
+    {
+      "id": "l11",
+      "shot": 5,
+      "after": 0.4,
+      "text": "Every action, reply and decision is a receipt, each hashed over the last. Verify the chain. A sibling gets a read-only page: statuses only."
+    },
+    {
+      "id": "l12",
+      "shot": 6,
+      "after": 0.5,
+      "text": "Five gates, decided in code, before every action: money, an original, a signature, anything irreversible, an heir who objects."
+    },
+    {
+      "id": "l13",
+      "shot": 7,
+      "after": 0.4,
+      "text": "Eight simulated weeks, scored against a ground truth written before the run. Fifteen interruptions instead of twenty-seven. Precision one, recall one, zero forbidden actions, and every spoken string checked for private data."
+    },
+    {
+      "id": "l14",
+      "shot": 8,
+      "after": 0.5,
+      "text": "After Loss Desk. Built to the Alexa plus add-on contract: M C P over streamable H T T P, an M C P app card, checkout endpoints, an agent skill. The executor decides. The desk does the rest."
+    }
+  ]
+}
