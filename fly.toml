@@ -1,0 +1,32 @@
+# Fly.io: one small machine, a 1 GB volume for the SQLite case store, HTTPS from Fly, never scaled to zero
+# (the organiser requires the MCP endpoint to stay live until judging ends on 20 Nov 2026).
+app = "after-loss-desk"
+primary_region = "sjc"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8300"
+  AFTERLOSS_DB = "/data/afterloss.sqlite3"
+  PUBLIC_URL = "https://after-loss-desk.fly.dev"
+
+[[mounts]]
+  source = "afterloss_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8300
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 200
+    soft_limit = 100
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
