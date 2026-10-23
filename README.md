@@ -1,5 +1,7 @@
 # After Loss Desk
 
+**Live:** https://after-loss-desk-647733667799.us-west1.run.app/ (MCP endpoint: https://after-loss-desk-647733667799.us-west1.run.app/mcp). Or run it locally: `uv sync && uv run afterloss serve`, then http://127.0.0.1:8300.
+
 **The executor's desk, on the Echo in the kitchen.** When someone dies, the person left to settle their affairs spends about 500 hours over about 18 months telling banks, insurers, pensions, utilities, credit bureaus and Social Security, chasing replies, and buying certified copies of the death certificate again and again. Almost none of it needs judgement. It needs persistence, a list, and someone to ask at the five moments that are hers.
 
 After Loss Desk is an **Alexa+ add-on** (an MCP server, spec 2025-11-25, Streamable HTTP) that:
@@ -8,7 +10,7 @@ After Loss Desk is an **Alexa+ add-on** (an MCP server, spec 2025-11-25, Streama
 - **orders the certified copies** the open ledger will consume through **Alexa+ checkout** (the add-on quotes; Alexa+ confirms, picks the payment instrument and takes the PIN; `Idempotency-Key` honoured for 24 h);
 - **interrupts only at five gates**, decided in code before every action: money leaves the estate, an original leaves her hands, her signature or a visit, anything irreversible, an heir objects;
 - keeps **state for months** in a case store, with a hash-chained receipt for every action, and a read-only progress page for a sibling;
-- **never speaks private data**: no names, no account numbers, no amounts by voice; institution names live on cards. Every spoken string passes a policy check in tests.
+- **never speaks private data**: no names, no account or reference numbers; institution names live on cards. The one amount it speaks is the certified-copy order total, which she must hear to approve the purchase. Every spoken string passes a policy check in tests.
 
 Built for **Build, Ship, Shape: Amazon Developer Hackathon 2026**, Alexa+ track, by Asish Kumar and Akash Kumar. MIT.
 
@@ -25,7 +27,7 @@ The Echo: the card the executor sees across the room and the words she hears, wi
 Animated walk (start a case, allow routine notices, order copies through the checkout handoff, a week passes, a decision on the Desk, the record): [docs/demo.gif](docs/demo.gif).
 
 - **Try it:** `uv run afterloss serve` → http://127.0.0.1:8300. The page is the Echo Show screen: a dawn gradient that shifts with the desk's state (violet while listening, warm amber while a gate waits), the card in large type on the left, and on the right every institution as an icon around the desk, with a pulse running out when a notice goes and back when a reply lands. One button plays the first week against the live server and hands the first gate to you. **Desk**: a queue of gates, the facts at a glance, a stamp, hold to approve. **Record**: every receipt as a hash chain you can orbit and verify. **How it works**: the five gates, the architecture, the eight-week run as a chart. It is a real MCP client standing in for Alexa+ and says so at its foot. MCP endpoint: `/mcp`. Agent Skill: [SKILL.md](SKILL.md). MCP App card: `ui://afterloss/card.html`.
-- **Design:** one meaning per colour, never colour alone (every state has a shape and a word), IBM Plex self-hosted, light and dark, keyboard shortcuts, reduced-motion respected. Tokens in `site/tokens.css`.
+- **Design:** one meaning per colour, never colour alone (every state has a shape and a word), Manrope (loaded from Google Fonts) and IBM Plex Mono (self-hosted), light and dark, keyboard shortcuts, reduced-motion respected. Tokens in `site/tokens.css`.
 - **The measured claim:** `uv run afterloss simulate --weeks 8` (below). **The pitch:** [docs/PITCH.md](docs/PITCH.md). **Against the rubric:** [docs/JUDGING.md](docs/JUDGING.md). **Policy mapping:** [docs/POLICY.md](docs/POLICY.md). **Friction log:** [docs/FRICTION.md](docs/FRICTION.md).
 
 ## How it works
@@ -91,11 +93,12 @@ Adding a state is a new JSON file with the same shape. The adapters in `afterlos
 
 ## Policy
 
-Alexa+ add-on policy (21 Jul 2026), as applied here: s.3 private personal information is never collected or recited by voice (closed enums; names and numbers only on the web client; test-enforced); s.4 adult account, nothing child-facing; s.9 legal lines are quoted from the statute and carry "That is the court's own rule, not legal advice"; s.13 the 988 Lifeline is in the first reply and no life-safety claim is made anywhere; s.14 checkout confirmation, payment instrument and PIN stay with Alexa+. Details: [docs/POLICY.md](docs/POLICY.md).
+Alexa+ add-on policy (21 Jul 2026), as applied here: s.3 private personal information is never collected or recited by voice (closed enums; names and numbers only on the web client; test-enforced); s.4 adult account, nothing child-facing; s.9 legal lines are quoted from the statute and carry "That is the court's own rule, not legal advice"; s.13 the 988 Lifeline is in the first reply and no life-safety claim is made anywhere; s.14 checkout confirmation, payment instrument and PIN stay with Alexa+. Not in this build: the s.16 purchase rules (written confirmation, refund policy before purchase) and the s.3 privacy policy link and consent prompt. Details: [docs/POLICY.md](docs/POLICY.md).
 
 ## Limits
 
 - One state (California) and simulated institutions. The rule table is the thing to grow.
 - The checkout flow is exercised by the simulated client and the tests, not by a real Alexa+ device (no entrant has one).
+- The privacy guarantee is proven for the `speak` strings and for the simulated client. Amazon's design guide says an add-on cannot script what Alexa says, so on a real Alexa+ the assistant composes its own reply from the tool result. We keep private data out of the spoken fields and use closed schemas; we cannot prove what the assistant does with the rest of the result.
 - The MCP App card uses the 2026-01-26 app protocol by hand (`ui/initialize`, `ui/notifications/tool-result`, `tools/call`); hosts without MCP Apps get the text result.
 - Evidence numbers: CDC provisional 2025 deaths 3,094,593; Empathy's 2026 Grief Tax: about 500 hours, about 18 months (as reported by Insurance Business, 14 Sep 2026). Sources in [docs/PITCH.md](docs/PITCH.md).

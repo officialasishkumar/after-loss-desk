@@ -1,5 +1,6 @@
-# Fly.io: one small machine, a 1 GB volume for the SQLite case store, HTTPS from Fly, never scaled to zero
-# (the organiser requires the MCP endpoint to stay live until judging ends on 20 Nov 2026).
+# Fly.io (an alternative to Cloud Run; hosting is optional, the hackathon FAQ says a locally runnable public repo plus the demo
+# video is enough). One small machine, a 1 GB volume for the SQLite case store, HTTPS from Fly, never scaled to zero.
+# If you host, keep it up until judging ends on 20 Nov 2026.
 app = "after-loss-desk"
 primary_region = "sjc"
 
@@ -9,7 +10,7 @@ primary_region = "sjc"
 [env]
   PORT = "8300"
   AFTERLOSS_DB = "/data/afterloss.sqlite3"
-  PUBLIC_URL = "https://after-loss-desk.fly.dev"
+  PUBLIC_URL = "https://after-loss-desk.fly.dev"   # only if you deploy to Fly instead; the current deployment is on Cloud Run (docs/HOSTING.md)
 
 [[mounts]]
   source = "afterloss_data"

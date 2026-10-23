@@ -122,7 +122,7 @@ for (const [i, s] of cut.shots.entries()) {
     box-shadow:0 0 0 1.5px #7f7ff5,0 8px 30px rgba(0,0,0,.5)}
     i{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#4f8cff,#9b72f2,#d96570)}
     b{background:linear-gradient(90deg,#7aa7ff,#b49bff);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:600}</style><p><i></i><b>Gemini</b><span></span></p>`);
-  await page.$eval("span", (el, t) => { el.textContent = "· " + t; }, s.badge);
+  await page.$eval("span", (el, t) => { el.textContent = t; }, s.badge);
   const png = path.join(tmp, `badge-${i}.png`);
   await page.screenshot({ path: png, omitBackground: true });
   badges.push({ png, from: starts[i] + 0.3, to: starts[i] + parts[i].len - 0.3 });
