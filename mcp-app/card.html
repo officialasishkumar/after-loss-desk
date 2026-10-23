@@ -16,9 +16,13 @@ let nextId = 1; const pending = {};
 const send = (msg) => window.parent.postMessage(msg, "*");
 const request = (method, params) => new Promise((res) => { const id = nextId++; pending[id] = res; send({ jsonrpc: "2.0", id, method, params }); });
 window.addEventListener("message", (ev) => {
+  if (ev.source !== window.parent) return;
   const m = ev.data || {}; if (m.id && pending[m.id]) { pending[m.id](m.result || m.error); delete pending[m.id]; return; }
   if (m.method === "ui/notifications/tool-result") render((m.params && m.params.structuredContent) || parse(m.params));
 });
+// ui/notifications/size-changed: tell the host how tall the card is, so a host that sizes the frame from it shows the whole card.
+let lastH = 0;
+function reportSize(){ const c = document.getElementById("card"); const height = Math.ceil(c.offsetTop + c.offsetHeight + 16); if (height === lastH) return; lastH = height; send({ jsonrpc: "2.0", method: "ui/notifications/size-changed", params: { height } }); }
 function parse(p){ try { const t = p && p.content && p.content.find(c => c.type === "text"); return t ? JSON.parse(t.text) : null; } catch { return null; } }
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function render(result){
@@ -36,8 +40,9 @@ function render(result){
     if (c.session_id) h += `<p class="muted">Alexa+ confirms the payment on your device (payment instrument and PIN stay with Alexa).</p>`; }
   else if (c.kind === "progress") { h += `<div class="row"><span>Waiting on replies</span><b>${c.waiting}</b></div><div class="row"><span>Waiting on you</span><b>${c.parked}</b></div><div class="row"><span>Receipt chain</span><b>${c.chain_ok ? "intact" : "broken"}</b></div><div class="row"><span>Receipts</span><b>${c.receipts}</b></div>`;
     if (c.share_url) h += `<p class="fine muted">${esc(c.share_url)}</p>`; }
-  el.innerHTML = h;
+  el.innerHTML = h; reportSize();
   el.querySelectorAll("button[data-tool]").forEach(b => b.addEventListener("click", async () => { b.disabled = true; const r = await request("tools/call", { name: b.dataset.tool, arguments: JSON.parse(b.dataset.arg) }); render((r && r.structuredContent) || parse(r)); }));
 }
-request("ui/initialize", { protocolVersion: "2026-01-26", capabilities: {}, clientInfo: { name: "after-loss-desk-card", version: "0.1.0" } }).then(() => send({ jsonrpc: "2.0", method: "ui/notifications/initialized" }));
+// ui/initialize takes appInfo and appCapabilities (ext-apps spec.types.ts, McpUiInitializeRequest); the host may answer with its own protocolVersion.
+request("ui/initialize", { protocolVersion: "2026-01-26", appInfo: { name: "after-loss-desk-card", version: "0.1.0" }, appCapabilities: {} }).then(() => { send({ jsonrpc: "2.0", method: "ui/notifications/initialized" }); reportSize(); });
 </script></body></html>

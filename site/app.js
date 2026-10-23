@@ -127,20 +127,22 @@ function story(who, html) {
 function renderCard(out) {
   const c = out.card; const el = $("card"); el.classList.remove("card"); void el.offsetWidth; el.classList.add("card");
   if (!c) { el.innerHTML = `<p class="sub">${esc(out.speak || out.error)}</p>`; return; }
-  const row = (l, r, cls = "") => `<div class="row"><span>${l}</span><b class="${cls}">${r ?? ""}</b></div>`;
+  const row = (l, r, cls = "", fit = false) => `<div class="row"${fit ? " data-fit" : ""}><span>${l}</span><b class="${cls}">${r ?? ""}</b></div>`;
   const days = (d) => d == null ? "" : d < 0 ? `<span class="late">${-d} d late</span>` : `${d} d`;
   const lab = (x) => x.label ? `<span class="lab-line">${esc(x.label)}</span>` : "";
   let h = `<h1>${esc(c.title)}</h1>`;
   if (c.kind === "ledger") {
     h += `<dl class="kv"><div><dt>State</dt><dd>${esc(c.state)}</dd></div><div><dt>Certified copies</dt><dd>${c.originals_needed} needed, ${c.originals_on_hand} on hand</dd></div></dl>`;
-    h += c.rows.filter((r) => r.status !== "done").slice(0, 3).map((r) => row(esc(r.title) + lab(r), days(r.days_left))).join("");
-    if (c.rows.length > 3) h += `<p class="fine">and ${c.rows.length - 3} more around the room.</p>`;
+    const open = c.rows.filter((r) => r.status !== "done");
+    h += open.slice(0, FIT_MAX).map((r) => row(esc(r.title) + lab(r), days(r.days_left), "", true)).join("");
+    h += `<p class="fine" data-more data-extra="${Math.max(0, open.length - FIT_MAX)}" data-tpl="and {n} more around the room." hidden></p>`;
     if (c.action?.decision_id) h += `<button type="button" class="act" data-tool="approve" data-arg='${esc(JSON.stringify({ case_id: out.case_id, decision_id: c.action.decision_id }))}'>${icon("i-check")} ${esc(c.action.label)}</button><button type="button" class="act alt" data-tool="decline" data-arg='${esc(JSON.stringify({ case_id: out.case_id, decision_id: c.action.decision_id }))}'>Not now</button>`;
   } else if (c.kind === "due") {
     h += c.decisions.slice(0, 2).map((d) => `<div class="row"><span><span class="gate">${icon("i-diamond")}${esc(d.gate)}</span>${esc(d.summary)}</span></div>`).join("");
     if (c.decisions.length) h += `<button type="button" class="act" data-tool="approve" data-arg='${esc(JSON.stringify({ case_id: out.case_id, decision_id: c.decisions[0].id }))}'>${icon("i-check")} Approve</button><button type="button" class="act alt" data-go="desk">Check on the Desk ${icon("i-chev")}</button>`;
     if (c.decisions.length > 2) h += `<p class="fine">${c.decisions.length - 2} more on the Desk.</p>`;
-    h += c.items.slice(0, 3).map((i) => row(esc(i.title) + lab(i), days(i.days_left))).join("");
+    h += c.items.slice(0, FIT_MAX).map((i) => row(esc(i.title) + lab(i), days(i.days_left), "", true)).join("");
+    if (c.items.length) h += `<p class="fine" data-more data-extra="${Math.max(0, c.items.length - FIT_MAX)}" data-tpl="and {n} more on the list." hidden></p>`;
     if (!c.decisions.length && !c.items.length) h += `<p class="sub">${c.waiting.length ? `Nothing due. Waiting on ${c.waiting.length} repl${c.waiting.length === 1 ? "y" : "ies"}.` : "Nothing due. Rest."}</p>`;
   } else if (c.kind === "draft") {
     h += `<p class="sub pair">${c.label ? `<span>${esc(c.label)}</span>` : ""}<span class="chip">${esc(c.channel)}</span></p><pre>${esc(c.text)}</pre><p class="fine">Facts filled by code: ${esc(c.facts.join(", ") || "none")}</p>`;
@@ -150,14 +152,29 @@ function renderCard(out) {
   } else if (c.kind === "progress") {
     h += row("Waiting on replies", c.waiting) + row("Waiting on you", c.parked, "needs-b") + row("Receipt chain", c.chain_ok ? `<span class="ok">${icon("i-check")} intact</span>` : `<span class="bad">${icon("i-x")} broken</span>`) + row("Receipts", c.receipts);
     if (c.missed.length) h += `<p class="late">Past the date: ${esc(c.missed.join("; "))}</p>`;
-    if (c.share_url) h += `<button type="button" class="act alt" data-open="${esc(c.share_url)}">Open the sibling's page ${icon("i-chev")}</button>`;
+    if (c.share_url) h += `<button type="button" class="act alt" data-open="${esc(sameOrigin(c.share_url) || c.share_url)}">Open the sibling's page ${icon("i-chev")}</button>`;
   }
   el.innerHTML = h;
   el.querySelectorAll("[data-tool]").forEach((b) => b.addEventListener("click", () => call(b.dataset.tool, JSON.parse(b.dataset.arg))));
   el.querySelectorAll("[data-checkout]").forEach((b) => b.addEventListener("click", () => completeCheckout(b.dataset.checkout)));
   el.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
   el.querySelectorAll("[data-open]").forEach((b) => b.addEventListener("click", () => window.open(b.dataset.open, "_blank")));
+  fitCard();
 }
+// The card sits in a fixed-height screen. Show as many whole task rows as fit and say how many more there are; a row is never
+// cut in half. Runs again when the card's room changes (the reply text under it grows, the window resizes, the fonts arrive).
+const FIT_MAX = 8; let fitting = false;
+function fitCard() {
+  const el = $("card"), box = el.parentElement; if (fitting) return; fitting = true;
+  try {
+    const rows = [...el.querySelectorAll("[data-fit]")], more = el.querySelector("[data-more]"); if (!rows.length) return;
+    const extra = Number(more?.dataset.extra || 0); let shown = matchMedia("(max-width:720px)").matches ? Math.min(3, rows.length) : rows.length;
+    const paint = () => { const hid = rows.length - shown + extra; if (more) { more.hidden = hid <= 0; more.textContent = more.dataset.tpl.replace("{n}", hid); } };
+    rows.forEach((r, i) => (r.hidden = i >= shown)); paint();
+    while (shown > 1 && box.scrollHeight > box.clientHeight + 1) { shown--; rows[shown].hidden = true; paint(); }
+  } finally { fitting = false; }
+}
+{ const ro = new ResizeObserver(() => fitCard()); ro.observe($("card").parentElement); ro.observe($("card").closest(".screen-body")); } document.fonts?.ready.then(fitCard);
 async function completeCheckout(sessionId) {
   // What Alexa+ does after the customer confirms on the device. Sent twice with the same Idempotency-Key on purpose: the
   // record shows the second call replayed, not re-charged.
@@ -174,13 +191,52 @@ async function completeCheckout(sessionId) {
 // ---------- routing what you say ----------
 const KINDS = [["bank", /bank|checking|savings|credit union/], ["pension", /pension|retire|401|calpers/], ["employer", /employer|job|work|hospital/], ["insurance", /insur|policy/], ["utilities", /power|electric|gas|water|utilit|pg&e/], ["phone_internet", /phone|internet|mobile|cell/], ["subscriptions", /gym|subscri|membership|netflix/], ["credit_cards", /credit card|visa|mastercard|amex/], ["vehicle", /\bcar\b|truck|vehicle|camry/]];
 const RULE = { bank: "bank_notify", pension: "pension_notify", insurance: "insurance_claim", utilities: "utilities_notify", subscriptions: "subscription_cancel", credit_cards: "credit_card_notify", vehicle: "vehicle_reg5", employer: "employer_notify", phone_internet: "phone_internet_notify" };
+// What the sentence says about the death, passed to start_case as it was said. Anything it does not say is asked for, not guessed.
+const NUM = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
+const MON = "jan feb mar apr may jun jul aug sep oct nov dec".split(" ");
+const MONTH_RE = "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)";
+const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function dateOf(y, m, d) { const x = new Date(y, m, d, 12); return x.getFullYear() === y && x.getMonth() === m && x.getDate() === d ? x : null; }
+function spokenDate(t) {
+  const now = new Date(); now.setHours(12, 0, 0, 0); const back = (days = 0, months = 0, years = 0) => { const d = new Date(now); d.setFullYear(d.getFullYear() - years); d.setMonth(d.getMonth() - months); d.setDate(d.getDate() - days); return d; };
+  let m, d = null;
+  if ((m = t.match(/\b(\d{4})-(\d{1,2})-(\d{1,2})\b/))) d = dateOf(+m[1], m[2] - 1, +m[3]);
+  else if ((m = t.match(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/))) d = dateOf(+m[3], m[1] - 1, +m[2]);
+  else if ((m = t.match(new RegExp(`\\b${MONTH_RE}\\.? (\\d{1,2})(?:st|nd|rd|th)?(?:,? (\\d{4}))?\\b`)))) { d = dateOf(+(m[3] || now.getFullYear()), MON.indexOf(m[1].slice(0, 3)), +m[2]); if (d && !m[3] && d > now) d = dateOf(d.getFullYear() - 1, d.getMonth(), d.getDate()); }
+  else if ((m = t.match(new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)? (?:of )?${MONTH_RE}(?:,? (\\d{4}))?\\b`)))) { d = dateOf(+(m[3] || now.getFullYear()), MON.indexOf(m[2].slice(0, 3)), +m[1]); if (d && !m[3] && d > now) d = dateOf(d.getFullYear() - 1, d.getMonth(), d.getDate()); }
+  else if ((m = t.match(/\b(\d+|a|an|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve) (day|week|month|year)s? ago\b/))) { const n = NUM[m[1]] ?? +m[1]; d = m[2] === "day" ? back(n) : m[2] === "week" ? back(7 * n) : m[2] === "month" ? back(0, n) : back(0, 0, n); }
+  else if (/\bday before yesterday\b/.test(t)) d = back(2);
+  else if (/\byesterday\b|\blast night\b/.test(t)) d = back(1);
+  else if (/\btoday\b|\bthis (morning|afternoon|evening)\b|\btonight\b/.test(t)) d = back(0);
+  else if (/\blast week\b/.test(t)) d = back(7);
+  else if (/\blast month\b/.test(t)) d = back(0, 1);
+  else if (/\blast year\b/.test(t)) d = back(0, 0, 1);
+  return d ? { iso: ymd(d), future: d > now } : null;
+}
+// A will, as a thing the person has or has not: "there is a will", "he left a will", "no will", "she never made a will".
+function willOf(t) {
+  if (/\bno (last )?will\b|\bwithout (a |any )?(last )?will\b|\bintestate\b|\b(n't|not|never) (have |leave |left |make |made |had |write |wrote )?(a |any )?(last )?will\b|\bwill (does not|doesn't|did not|didn't) exist\b/.test(t)) return false;
+  if (/\b(there is|there's|there was|has|had|have|left|made|with|wrote|got) (a |the |his |her |their )?(last )?will\b|\b(his|her|their|the|a) (last )?will\b|\bwill (exists?|was (found|made|signed))\b/.test(t)) return true;
+  return null;
+}
+const REL = (t) => /husband|wife|spouse|partner/.test(t) ? "spouse" : /mother|father|\bmom\b|\bdad\b|parent/.test(t) ? "child" : /brother|sister|sibling/.test(t) ? "sibling" : /\bson\b|daughter/.test(t) ? "parent" : /friend/.test(t) ? "friend" : /aunt|uncle|cousin|grand|in-law|niece|nephew|relative|neighbo/.test(t) ? "other" : null;
 function route(text) {
   const t = text.toLowerCase();
-  if (/died|passed|death|start/.test(t) && !state.caseId) {
-    const rel = /husband|wife|spouse|partner/.test(t) ? "spouse" : /mother|father|mom|dad|parent/.test(t) ? "child" : /brother|sister/.test(t) ? "sibling" : /\bson\b|daughter/.test(t) ? "parent" : /friend/.test(t) ? "friend" : "other";
-    const kinds = KINDS.filter(([, re]) => re.test(t)).map(([k]) => k);
-    const d = new Date(); d.setDate(d.getDate() - 7);
-    return ["start_case", { date_of_death: d.toISOString().slice(0, 10), relationship: rel, has_will: !/no will|without a will/.test(t), account_kinds: kinds.length ? kinds : ["bank"] }];
+  if (!state.caseId && (/died|passed|death|start/.test(t) || state.pending)) {
+    const p = state.pending ||= { rel: null, kinds: [], dod: null, will: null };
+    p.rel ??= REL(t);
+    for (const [k, re] of KINDS) if (re.test(t) && !p.kinds.includes(k)) p.kinds.push(k);
+    let note = "";
+    if (!p.dod) { const w = spokenDate(t); if (w?.future) note = "That date has not come yet. "; else if (w) p.dod = w.iso; }
+    p.will ??= willOf(t);
+    const missing = [!p.dod && "when they died", !p.rel && "who they were to you", p.will == null && "whether there is a will"].filter(Boolean);
+    if (missing.length === 1 && p.will == null && p.dod && p.rel) { if (/^(yes|yeah|yep|yup|sure)\b/.test(t)) p.will = true; else if (/^(no|nope)\b/.test(t)) p.will = false; if (p.will != null) missing.length = 0; }
+    if (missing.length) {
+      const eg = !p.dod ? "“three days ago, and there is a will”" : !p.rel ? "“my mother, and there is a will”" : "“there is a will” or “there is no will”";
+      return [null, `${note}Before I start, I need to know ${missing.join(", ").replace(/, ([^,]*)$/, " and $1")}. You could say ${eg}.`];
+    }
+    state.pending = null;
+    return ["start_case", { date_of_death: p.dod, relationship: p.rel, has_will: p.will, account_kinds: p.kinds }];
   }
   if (!state.caseId) return [null, "Start by telling me what happened: who died, whether there is a will, and what accounts there were."];
   if (/approve|^yes|go ahead|do it|allow/.test(t)) return state.lastDecision ? ["approve", { case_id: state.caseId, decision_id: state.lastDecision }] : [null, "Nothing is waiting for your approval."];
@@ -214,7 +270,7 @@ function setPlay(on) { $("play").querySelector("b").textContent = on ? "Stop the
 async function playStory() {
   if (state.playing) { state.playing = false; speechSynthesis?.cancel(); return; }
   state.playing = true; $("scene").classList.add("playing"); $("scene").classList.remove("handing"); setPlay(true); $("handoff").hidden = true;
-  state.caseId = null; state.lastDecision = null; state.snapshot = null; state.prevStatus = {}; state.story = [];
+  state.caseId = null; state.pending = null; state.lastDecision = null; state.snapshot = null; state.prevStatus = {}; state.story = [];
   history.replaceState(null, "", location.pathname + location.hash);
   const check = () => { if (!state.playing) throw new Error("stopped"); };
   try {
@@ -296,10 +352,23 @@ async function refresh() {
   if (state.devState === "idle") device("idle");
   $("chain").className = "chip " + (c.chain_ok ? "done" : "bad"); $("chain").innerHTML = `${icon(c.chain_ok ? "i-check" : "i-x")} Chain ${c.chain_ok ? "intact" : "broken"}`; $("chain-n").textContent = `${c.progress.receipts} receipts`;
   renderReceipts();
-  if (c.progress.share) $("share-link").href = c.progress.share;
+  showShare(c);
   drawDaybar();
   if (state.view === "desk") renderDesk();
-  if (state.view === "record") mountRecord3d();
+  if (state.view === "record") await mountRecord3d();
+}
+// The sibling's read-only page: the server's /share/<token>. The case snapshot does not carry the token, so the link is
+// asked for once per case from the share_progress tool (a read, it writes nothing) and kept as a path on this origin.
+const sameOrigin = (u) => { try { const x = new URL(u, location.href); return x.pathname + x.search; } catch { return null; } };
+function showShare(c) {
+  const link = $("share-link"), sent = $("share-sent"); const known = c.share_url || c.progress?.share_url || state.shareUrl?.[c.id];
+  if (known) { link.href = sameOrigin(known) || "#"; sent.hidden = false; return; }
+  sent.hidden = true; if (state.shareAsk === c.id) return; state.shareAsk = c.id;
+  rpc("tools/call", { name: "share_progress", arguments: { case_id: c.id } }).then((res) => {
+    const out = res.structuredContent || JSON.parse(res.content.find((x) => x.type === "text").text); const url = out.card?.share_url && sameOrigin(out.card.share_url);
+    if (!url || state.caseId !== c.id) { state.shareAsk = null; return; }
+    (state.shareUrl ||= {})[c.id] = url; link.href = url; sent.hidden = false;
+  }).catch(() => { state.shareAsk = null; });
 }
 async function drawDaybar() {
   const r = await fetch(`/api/cases/${state.caseId}/timeline`); if (!r.ok) return;
@@ -333,7 +402,8 @@ async function renderDesk() {
   const body = $("desk-body");
   const dec = state.snapshot?.due.decisions || [];
   const recent = (state.snapshot?.receipts || []).filter((x) => x.action === "approve" || x.action === "decline").slice(-6).reverse();
-  $("desk-decided").innerHTML = recent.length ? recent.map((x) => `<li class="${x.action === "decline" ? "declined" : ""}">${icon(x.action === "approve" ? "i-check" : "i-x")}<span><span>${esc(x.action)} ${esc(x.task_id || "")}</span><span class="lab-line">${esc(x.day)}</span></span></li>`).join("") : `<li class="muted">Nothing decided yet.</li>`;
+  $("desk-decided").innerHTML = recent.length ? recent.map((x) => `<li class="${x.action === "decline" ? "declined" : ""}">${icon(x.action === "approve" ? "i-check" : "i-x")}<span><span>${esc(x.action)} ${esc(x.task_id || "")}</span><span class="lab-line">${esc(x.day)}</span></span></li>`).join("") : `<li class="empty muted">Nothing decided yet.</li>`;
+  $("desk-skip").hidden = dec.length < 2;
   if (!dec.length) {
     $("desk-pos").textContent = "";
     $("desk-queue").innerHTML = `<li class="empty muted">Nothing waiting.</li>`;
@@ -415,21 +485,44 @@ function renderReceipts() {
 $("rec-filter").addEventListener("click", (e) => { const b = e.target.closest("button[data-f]"); if (!b) return; state.filter = b.dataset.f; $("rec-filter").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); renderReceipts(); });
 $("verify").addEventListener("click", async () => {
   if (!state.caseId) return toast("Start a case first.");
-  $("verify").disabled = true; await refresh();
-  if (chain) await chain.sweep(); else await sleep(600);
+  $("verify").disabled = true;
+  try { await refresh(); if (chain) await chain.sweep(); else await sleep(600); } finally { $("verify").disabled = false; }
   toast(state.snapshot.chain_ok ? `Every hash checks out: ${state.snapshot.progress.receipts} receipts, one chain.` : "The chain does not verify.");
-  $("verify").disabled = false;
 });
-let chain = null;
-async function mountRecord3d() {
-  $("chain-empty").hidden = !!state.snapshot;
-  if (!state.snapshot || reduced) return;
-  const { mountChain } = await import("/chain3d.js");
-  chain?.dispose();
-  chain = await mountChain($("chain3d"), state.snapshot.receipts, state.snapshot.chain_ok, (r) => {
-    $("chain3d-hover").innerHTML = r ? `<span class="pair"><b>#${r.seq}</b><span>${esc(r.day)}</span><span>${esc(r.actor)}</span><span>${esc(r.action)}</span>${r.task_id ? `<span>${esc(r.task_id)}</span>` : ""}${r.note ? `<span>${esc(r.note)}</span>` : ""}</span>` : "Drag to orbit, pinch or ctrl+wheel to zoom, hover a block for its receipt. A cube is a receipt, a diamond is a gate, the newest breathes.";
-    $("receipts").querySelectorAll("li.r").forEach((li) => li.classList.toggle("hi", !!r && Number(li.dataset.seq) === r.seq));
-  });
+let chain = null, chainSig = "", mountLock = Promise.resolve();
+// The 3D chain is an extra view of the receipt list below it. It mounts only while this page is open, only when the receipts
+// changed, and gives its GPU context back when it goes. Where 3D cannot run (reduced motion, no WebGL, the library blocked)
+// its box and its hint are hidden and the list below is the record.
+const HOVER_HINT = "Drag to orbit, pinch or ctrl+wheel to zoom, hover a block for its receipt. A cube is a receipt, a diamond is a gate, the newest breathes.";
+function chainUi(mode) {
+  $("chain3d").parentElement.hidden = mode === "off"; $("chain3d-hover").hidden = mode !== "on"; $("chain3d").hidden = mode !== "on";
+  $("chain-empty").hidden = mode !== "none" && mode !== "loading";
+  $("chain-empty").firstElementChild.textContent = mode === "loading" ? "Loading the chain view. The list below is already the whole record." : "No case yet. Start one on the Echo; the chain grows one block per receipt.";
+}
+function dropChain() { const v = chain?.dispose() || null; chain = null; chainSig = ""; return v; }
+function unmountRecord3d() { dropChain(); }
+// Mounts run one at a time, so two refreshes can never build two renderers; each reads the snapshot as it runs.
+function mountRecord3d() { const run = () => doMountRecord3d(); const p = mountLock.then(run, run); mountLock = p.catch(() => {}); return p; }
+async function doMountRecord3d() {
+  const snap = state.snapshot;
+  if (state.view !== "record") return;
+  if (!snap) { dropChain(); return chainUi("none"); }
+  if (reduced) { dropChain(); return chainUi("off"); }
+  const sig = `${snap.receipts.length}:${snap.receipts.at(-1)?.hash || ""}:${snap.chain_ok}`;
+  if (chain && sig === chainSig) return chainUi("on");
+  try {
+    const m = await import("/chain3d.js");
+    if (!m.canRender3d()) { dropChain(); return chainUi("off"); }
+    const had = !!chain; const view = dropChain();
+    if (!had) chainUi("loading");
+    const next = await m.mountChain($("chain3d"), snap.receipts, snap.chain_ok, (r) => {
+      $("chain3d-hover").innerHTML = r ? `<span class="pair"><b>#${r.seq}</b><span>${esc(r.day)}</span><span>${esc(r.actor)}</span><span>${esc(r.action)}</span>${r.task_id ? `<span>${esc(r.task_id)}</span>` : ""}${r.note ? `<span>${esc(r.note)}</span>` : ""}</span>` : HOVER_HINT;
+      $("receipts").querySelectorAll("li.r").forEach((li) => li.classList.toggle("hi", !!r && Number(li.dataset.seq) === r.seq));
+    }, view);
+    if (state.view !== "record") { next?.dispose(); return; }
+    if (!next) return chainUi("off");
+    chain = next; chainSig = sig; chainUi("on");
+  } catch { dropChain(); chainUi("off"); }
 }
 
 // ---------- how it works: live scoreboard, counting stats ----------
@@ -468,13 +561,13 @@ function go(view) {
   if (location.hash !== "#" + view) history.replaceState(null, "", `${location.search}#${view}`);
   window.scrollTo({ top: 0 });
   if (view === "desk") renderDesk();
-  if (view === "record") mountRecord3d(); else { chain?.dispose(); chain = null; }
+  if (view === "record") mountRecord3d(); else unmountRecord3d();
   if (view === "how") countStats();
 }
 window.addEventListener("hashchange", () => go(location.hash.slice(1) || "echo"));
 $("theme").addEventListener("click", () => { const cur = document.documentElement.dataset.theme || "light"; const next = cur === "light" ? "dark" : "light"; document.documentElement.dataset.theme = next; try { localStorage.setItem("ald-theme2", next); } catch {} $("theme").innerHTML = icon(next === "light" ? "i-moon" : "i-sun"); });
 if (document.documentElement.dataset.theme === "dark") $("theme").innerHTML = icon("i-sun");
-document.addEventListener("keydown", (e) => { if (e.target.closest("input,textarea,select") || e.metaKey || e.ctrlKey) return; if (e.key === "?") { $("keys-dlg").showModal(); return; } const k = e.key.toLowerCase(); if (k === "n") advance(1); else if (k === "w") advance(7); else if (k === "1") go("echo"); else if (k === "2") go("desk"); else if (k === "3") go("record"); else if (k === "4") go("how"); else if (k === "a" && state.view === "desk" && state.lastDecision) { const t = state.snapshot?.due.decisions[state.deskIndex]; if (t) confirmStep(t.id, { title: t.summary }); } });
+document.addEventListener("keydown", (e) => { if (e.target.closest("input,textarea,select") || e.metaKey || e.ctrlKey || document.querySelector("dialog[open]")) return; if (e.key === "?") { $("keys-dlg").showModal(); return; } const k = e.key.toLowerCase(); if (k === "n") advance(1); else if (k === "w") advance(7); else if (k === "1") go("echo"); else if (k === "2") go("desk"); else if (k === "3") go("record"); else if (k === "4") go("how"); else if (k === "a" && state.view === "desk" && state.lastDecision) { const t = state.snapshot?.due.decisions[state.deskIndex]; if (t) confirmStep(t.id, { title: t.summary }); } });
 $("keys").addEventListener("click", () => $("keys-dlg").showModal());
 document.addEventListener("click", (e) => { const p = $("voice-pop"); if (p.open && !e.composedPath().includes(p)) p.open = false; });
 document.addEventListener("keydown", (e) => { const p = $("voice-pop"); if (e.key === "Escape" && p.open) { p.open = false; p.querySelector("summary").focus(); } });

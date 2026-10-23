@@ -46,3 +46,31 @@ def test_no_middle_dot_in_project_text():
         text = p.read_text(errors="ignore")
         hits += [f"{p.name}: {b!r}" for b in banned if b in text]
     assert not hits, hits
+
+
+def test_card_initialize_sends_the_names_the_apps_spec_defines():
+    card = (ROOT / "mcp-app" / "card.html").read_text()
+    assert "appInfo" in card and "appCapabilities" in card and "clientInfo" not in card
+    assert "ui/notifications/size-changed" in card
+
+
+def test_record_page_gives_back_its_gpu_context_and_hides_a_3d_box_that_cannot_run():
+    chain = (ROOT / "site" / "chain3d.js").read_text()
+    app = (ROOT / "site" / "app.js").read_text()
+    assert "forceContextLoss" in chain and "removeEventListener" in chain and "canRender3d" in chain
+    assert 'chainUi("off")' in app and "await mountRecord3d()" in app
+
+
+def test_sibling_link_is_not_a_dead_hash_and_the_spoken_date_is_used():
+    app = (ROOT / "site" / "app.js").read_text()
+    html = (ROOT / "site" / "index.html").read_text()
+    assert "share_progress" in app and "c.progress.share)" not in app
+    assert 'id="share-sent" hidden' in html
+    assert "setDate(d.getDate() - 7)" not in app and "spokenDate" in app and "willOf" in app
+
+
+def test_no_lookalike_separators_in_the_pages():
+    lookalikes = ("•", "∙", "⋅", "‧", "・")
+    for p in ("site/index.html", "site/app.js", "site/style.css", "mcp-app/card.html"):
+        text = (ROOT / p).read_text()
+        assert not [c for c in lookalikes if c in text], p

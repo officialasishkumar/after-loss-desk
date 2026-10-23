@@ -2,19 +2,33 @@
 // (blue the assistant or Alexa, slate the agent, amber a gate or an heir, green an approval, grey an institution); the
 // newest block breathes. Links are green while the chain verifies and red if it does not. Drag to orbit, wheel to zoom,
 // hover for the receipt; focus(seq) lights one block from the list; sweep() runs a verification pulse down the chain.
-// three.js is loaded only when this page is opened; if it cannot load, the list below still stands.
-let THREE = null;
-export async function mountChain(container, receipts, chainOk, onHover) {
+// three.js is loaded only when this page is opened; if it cannot load or the browser has no WebGL, mountChain returns null,
+// shows nothing, and the list below still stands. dispose() gives the GPU context back and returns the view for the next mount.
+let THREE = null, glOk = null;
+// Can this browser make a WebGL context at all? Asked once; the probe context is released at once.
+export function canRender3d() {
+  if (glOk !== null) return glOk;
+  try {
+    const c = document.createElement("canvas"); const gl = c.getContext("webgl2") || c.getContext("webgl");
+    glOk = !!gl; gl?.getExtension("WEBGL_lose_context")?.loseContext();
+  } catch { glOk = false; }
+  return glOk;
+}
+export async function mountChain(container, receipts, chainOk, onHover, view) {
+  if (!canRender3d()) return null;
   if (!THREE) {
-    try { THREE = await import("https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"); }
-    catch { container.hidden = true; return null; }
+    // A library that has not arrived after ten seconds counts as blocked: the box goes away and the list stands.
+    const load = import("https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"); load.catch(() => {});
+    try { THREE = await Promise.race([load, new Promise((_, no) => setTimeout(() => no(new Error("slow")), 10000))]); }
+    catch { return null; }
   }
-  container.hidden = false;
   container.replaceChildren();
   const W = container.clientWidth || 800, H = container.clientHeight || 460;
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); }
+  catch { return null; }
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(W, H);
-  container.appendChild(renderer.domElement);
+  container.hidden = false; container.appendChild(renderer.domElement);
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(32, W / H, 0.1, 400);
   const group = new THREE.Group(); scene.add(group);
@@ -37,16 +51,17 @@ export async function mountChain(container, receipts, chainOk, onHover) {
     group.add(line);
   }
   const span = Math.max(4, n * step * 0.32); const dist = Math.max(radius * 2.7 + 3, span * 1.4); camera.position.set(0, span * 0.4, dist); camera.lookAt(0, 0, 0);
-  let rotY = 0.2, rotX = 0.15, targetY = rotY, drag = null, zoom = 1;
+  let rotY = view?.rotY ?? 0.2, rotX = view?.rotX ?? 0.15, targetY = view?.targetY ?? rotY, drag = null, zoom = view?.zoom ?? 1;
   const el = renderer.domElement; el.style.cursor = "grab"; el.style.touchAction = "none";
+  const onMove = (e) => { if (!drag) return; targetY = drag.ry + (e.clientX - drag.x) * 0.008; rotX = Math.max(-0.8, Math.min(0.8, drag.rx + (e.clientY - drag.y) * 0.006)); };
+  const onUp = () => { drag = null; el.style.cursor = "grab"; };
   el.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY, ry: targetY, rx: rotX }; el.style.cursor = "grabbing"; });
-  window.addEventListener("pointermove", (e) => { if (!drag) return; targetY = drag.ry + (e.clientX - drag.x) * 0.008; rotX = Math.max(-0.8, Math.min(0.8, drag.rx + (e.clientY - drag.y) * 0.006)); });
-  window.addEventListener("pointerup", () => { drag = null; el.style.cursor = "grab"; });
+  window.addEventListener("pointermove", onMove); window.addEventListener("pointerup", onUp);
   el.addEventListener("wheel", (e) => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); zoom = Math.max(0.5, Math.min(2.2, zoom + e.deltaY * 0.004)); }, { passive: false });
   const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2(-9, -9); let hovered = null, focused = null, sweepAt = -1;
   el.addEventListener("pointermove", (e) => { const b = el.getBoundingClientRect(); mouse.set(((e.clientX - b.left) / b.width) * 2 - 1, -((e.clientY - b.top) / b.height) * 2 + 1); });
   el.addEventListener("pointerleave", () => mouse.set(-9, -9));
-  let alive = true; const t0 = performance.now();
+  let alive = true, sweepTimer = 0, sweepDone = null; const t0 = performance.now();
   (function frame() {
     if (!alive) return;
     const t = (performance.now() - t0) / 1000;
@@ -59,10 +74,17 @@ export async function mountChain(container, receipts, chainOk, onHover) {
     if (hit !== hovered) { if (hovered && hovered !== focused) hovered.scale.setScalar(1); hovered = hit; if (hovered) hovered.scale.setScalar(1.35); onHover?.(hovered ? hovered.userData : null); }
     renderer.render(scene, camera); requestAnimationFrame(frame);
   })();
-  const ro = new ResizeObserver(() => { const w = container.clientWidth, h = container.clientHeight || H; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }); ro.observe(container);
+  const ro = new ResizeObserver(() => { const w = container.clientWidth, h = container.clientHeight || H; if (!alive || !w) return; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }); ro.observe(container);
   return {
-    dispose() { alive = false; ro.disconnect(); renderer.dispose(); container.replaceChildren(); },
+    dispose() {
+      if (!alive) return null;
+      alive = false; clearInterval(sweepTimer); sweepDone?.(); ro.disconnect();
+      window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp);
+      group.traverse((o) => { o.geometry?.dispose(); o.material?.dispose(); });
+      renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); container.replaceChildren();
+      return { rotX, rotY, targetY, zoom };
+    },
     focus(seq) { if (focused && focused !== hovered) focused.scale.setScalar(1); focused = seq == null ? null : bySeq.get(seq) || null; if (focused) focused.scale.setScalar(1.5); },
-    sweep() { return new Promise((resolve) => { let i = 0; const id = setInterval(() => { sweepAt = i++; if (i > meshes.length + 6) { clearInterval(id); sweepAt = -1; meshes.forEach((m) => (m.material.emissiveIntensity = m.userData.base)); resolve(); } }, Math.max(18, 900 / Math.max(1, meshes.length))); }); },
+    sweep() { if (!alive) return Promise.resolve(); return new Promise((resolve) => { let i = 0; sweepDone = resolve; sweepTimer = setInterval(() => { sweepAt = i++; if (i > meshes.length + 6) { clearInterval(sweepTimer); sweepAt = -1; meshes.forEach((m) => (m.material.emissiveIntensity = m.userData.base)); resolve(); } }, Math.max(18, 900 / Math.max(1, meshes.length))); }); },
   };
 }

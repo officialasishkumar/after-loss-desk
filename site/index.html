@@ -3,7 +3,7 @@
 <title>After Loss Desk</title>
 <meta name="description" content="The executor's desk on the Echo: who to tell, by when, with what. An Alexa+ add-on that asks only at five gates.">
 <script>try{var t=localStorage.getItem("ald-theme2");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="/tokens.css?v=21"><link rel="stylesheet" href="/style.css?v=21">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="/tokens.css?v=22"><link rel="stylesheet" href="/style.css?v=22">
 <link rel="icon" href="/favicon.svg">
 </head><body data-case="none">
 <svg style="display:none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -46,7 +46,7 @@
     <a href="#echo" data-view="echo">Echo</a><a href="#desk" data-view="desk">Desk <b id="desk-count" class="count" hidden>0</b></a><a href="#record" data-view="record">Record</a><a href="#how" data-view="how">How it works</a>
   </nav>
   <div class="top-right">
-    <button type="button" class="ghost icon-btn" id="keys" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)"><span class="q" aria-hidden="true">?</span></button>
+    <button type="button" class="ghost icon-btn" id="keys" aria-label="Keyboard shortcuts" aria-haspopup="dialog" title="Keyboard shortcuts (?)"><span class="q" aria-hidden="true">?</span></button>
     <button type="button" class="ghost icon-btn" id="theme" aria-label="Switch theme" title="Switch theme"><svg class="icon"><use href="#i-moon"/></svg></button>
   </div>
 </header>
@@ -83,7 +83,7 @@
       <button type="submit" class="primary">Say</button>
       <details class="pop" id="voice-pop">
         <summary class="ghost icon-btn" aria-label="Voice and spoken replies" title="Voice and spoken replies"><svg class="icon" aria-hidden="true"><use href="#i-sound"/></svg></summary>
-        <div class="pop-body">
+        <div class="pop-body" role="group" aria-label="Voice and spoken replies">
           <button type="button" class="ghost small" id="mute" aria-label="Spoken replies on"><svg class="icon" aria-hidden="true"><use href="#i-sound"/></svg><span>Spoken replies on</span></button>
           <label class="pop-field"><span class="lab-up">Voice</span><select id="voice"></select></label>
         </div>
@@ -127,7 +127,7 @@
       <aside class="queue-col">
         <h2 class="col-h">Waiting on you</h2>
         <ol class="queue" id="desk-queue"><li class="muted empty">Nothing yet.</li></ol>
-        <button type="button" class="link small" id="desk-skip">Skip for now</button>
+        <button type="button" class="link small" id="desk-skip" hidden>Skip for now</button>
         <h2 class="col-h decided-h">Written down lately</h2>
         <ol class="decided" id="desk-decided"></ol>
       </aside>
@@ -139,9 +139,9 @@
 <!-- ============ RECORD ============ -->
 <section id="view-record" class="view" data-view="record" hidden>
   <div class="record">
-    <header class="page-h"><h1>The record</h1><p class="page-p">Every action the agent took, every reply, every decision: one receipt each, each one hashed over the last. <a id="share-link" href="#" target="_blank" rel="noopener">The sibling's read-only page</a> shows statuses only.</p></header>
+    <header class="page-h"><h1>The record</h1><p class="page-p">Every action the agent took, every reply, every decision: one receipt each, each one hashed over the last.<span id="share-sent" hidden> <a id="share-link" href="/" target="_blank" rel="noopener">The sibling's read-only page</a> shows statuses only.</span></p></header>
     <div class="chain-bar"><span id="chain" class="chip"></span><span class="small muted" id="chain-n"></span><button type="button" class="ghost small" id="verify">Verify the chain</button><span class="fine" id="chain3d-hover">Drag to orbit, pinch or ctrl+wheel to zoom, hover a block for its receipt. A cube is a receipt, a diamond is a gate, the newest breathes.</span></div>
-    <div class="chain3d-wrap"><div class="chain3d" id="chain3d" hidden></div><div class="chain-empty" id="chain-empty"><p>No case yet. Start one on the Echo; the chain grows one block per receipt.</p></div></div>
+    <div class="chain3d-wrap"><div class="chain3d" id="chain3d" role="img" aria-label="The receipt chain in three dimensions. The list below has the same receipts." hidden></div><div class="chain-empty" id="chain-empty"><p>No case yet. Start one on the Echo; the chain grows one block per receipt.</p></div></div>
     <div class="rec-filter" id="rec-filter" role="group" aria-label="Show"><button type="button" class="on" data-f="all">All</button><button type="button" data-f="gate">Gates</button><button type="button" data-f="decision">Decisions</button><button type="button" data-f="exec">Actions</button><button type="button" data-f="reply">Replies</button></div>
     <ol class="receipts" id="receipts"></ol>
   </div>
@@ -154,7 +154,7 @@
       <p class="hero-kicker">Build, Ship, Shape: Amazon Developer Hackathon 2026, Alexa+ track</p>
       <h1 class="hero-h">The executor is alone with five hundred hours of paperwork. The desk isn't.</h1>
       <p class="hero-p">Eighteen months of letters, calls and certified copies. None of it needs judgement, except at five moments.</p>
-      <dl class="hero-stats"><div><dt>deaths a year</dt><dd data-n="3.09" data-unit="M">3.09M</dd><span>CDC, 2025</span></div><div><dt>hours of admin per executor</dt><dd data-n="500">500</dd><span>Empathy, 2026</span></div><div><dt>months to wind down</dt><dd data-n="18">18</dd><span>Empathy, 2026</span></div><div><dt>asks kept, of a confirm-everything 27</dt><dd data-n="15">15</dd><span>eight-week simulation</span></div></dl>
+      <dl class="hero-stats"><div><dt>deaths a year</dt><dd data-n="3.09" data-unit="M">3.09M</dd><span>CDC, 2025</span></div><div><dt>hours of admin per executor</dt><dd data-n="500">500</dd><span>Empathy, 2026</span></div><div><dt>months to wind down</dt><dd data-n="18">18</dd><span>Empathy, 2026</span></div><div><dt>asks kept, of a confirm-everything 26</dt><dd data-n="15">15</dd><span>eight-week simulation</span></div></dl>
     </header>
 
     <section class="how-sec">
@@ -217,7 +217,7 @@
   <p class="credits"><span>Asish Kumar and Akash Kumar</span><span>MIT licence</span></p>
 </footer>
 <dialog id="keys-dlg" aria-labelledby="keys-h"><h3 id="keys-h">Keyboard shortcuts</h3><dl class="keys"><dt><kbd>N</kbd></dt><dd>Next day</dd><dt><kbd>W</kbd></dt><dd>Seven days on</dd><dt><kbd>1</kbd> to <kbd>4</kbd></dt><dd>Echo, Desk, Record, How it works</dd><dt><kbd>A</kbd></dt><dd>Approve, on the Desk</dd><dt><kbd>?</kbd></dt><dd>This sheet</dd></dl><form method="dialog"><menu class="dlg-menu"><button class="ghost" value="close">Close</button></menu></form></dialog>
-<dialog id="labels-dlg"><form method="dialog" class="labels-form"><h3>Institution names</h3><p class="muted small">Shown on cards and letters. Never spoken.</p><div id="labels"></div><menu><button type="button" class="ghost" id="labels-cancel">Cancel</button><button type="submit" class="primary" id="labels-save">Save</button></menu></form></dialog>
+<dialog id="labels-dlg" aria-labelledby="labels-h"><form method="dialog" class="labels-form"><h3 id="labels-h">Institution names</h3><p class="muted small">Shown on cards and letters. Never spoken.</p><div id="labels"></div><menu><button type="button" class="ghost" id="labels-cancel">Cancel</button><button type="submit" class="primary" id="labels-save">Save</button></menu></form></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script type="module" src="/app.js?v=21"></script>
+<script type="module" src="/app.js?v=22"></script>
 </body></html>
