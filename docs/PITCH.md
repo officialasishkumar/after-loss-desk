@@ -14,7 +14,7 @@ Every beat is filmed from the simulated Alexa+ client in `site/`, on a fresh loa
 
 **2:09 (20 s)** Open **Record**. Every receipt is a block in a hash-chained chain; orbit it once, press **Verify the chain**, and show *Chain intact*. Click **The sibling's read-only page**: statuses only, no documents, no numbers. Say: "Every action is a receipt. A sibling can follow along and cannot change anything."
 
-**2:29 (16 s)** Open **How it works**: the five gates (D5 is an heir's objection), then press **Run the eight-week simulation**. The scoreboard shows 15 interruptions instead of 27, precision 1.0, recall 1.0, forbidden actions 0, 77 receipts, chain verified, 72 spoken strings, 0 policy violations. Say: "A synthetic estate over eight weeks, including a brother who objects about the car. Fifteen questions instead of twenty-seven, and the build fails if a gated action runs without approval." End on the scoreboard.
+**2:29 (16 s)** Open **How it works**: the five gates (D5 is an heir's objection), then press **Run the eight-week simulation**. The scoreboard shows 15 interruptions instead of 26, precision 1.0, recall 1.0, forbidden actions 0, 77 receipts, chain verified, 72 spoken strings, 0 policy violations. Say: "A synthetic estate over eight weeks, including a brother who objects about the car. Fifteen questions instead of twenty-six, and the build fails if a gated action runs without approval." End on the scoreboard.
 
 ## Why this, why now
 

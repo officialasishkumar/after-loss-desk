@@ -61,22 +61,22 @@ flowchart LR
 | Interruption precision | **1.0** |
 | Decision recall | **1.0** |
 | Forbidden actions taken | **0** (must be 0) |
-| Confirm-everything baseline | 27 interruptions |
+| Confirm-everything baseline | 26 interruptions |
 | Tasks done | 17 / 17 |
 | Missed deadlines | 0 |
-| Days to settle the eight-week scope | 30 |
+| Days to settle the eight-week scope | 46 |
 | Certified originals bought / left | 8 / 5 |
 | Receipts in chain | 77, chain verified |
 | Spoken strings checked / policy violations | 72 / 0 |
 
-A confirm-everything agent would have asked 27 times. After Loss Desk asked 15, never missed a decision a careful executor would insist on, and never acted where the policy said it needed her.
+A confirm-everything agent would have asked 26 times. After Loss Desk asked 15, never missed a decision a careful executor would insist on, and never acted where the policy said it needed her.
 
 ## Run it
 
 ```bash
 uv sync
 uv run afterloss serve            # web client + MCP endpoint + checkout endpoints on :8300 (PORT to change)
-uv run pytest                     # 21 tests: ledger, governor, checkout idempotency, voice policy, web endpoints, a real MCP client over Streamable HTTP, the simulation
+uv run pytest                     # 60 tests: ledger, governor, checkout idempotency and binding, voice policy, rule sources, web endpoints, a real MCP client over Streamable HTTP, the simulation
 uv run afterloss simulate --weeks 8
 uv run afterloss policy-check
 ```
@@ -87,7 +87,7 @@ Configuration: `AFTERLOSS_DB` (SQLite path, default `data/afterloss.sqlite3`), `
 
 ## The rule table
 
-`afterloss/rules/california.json`: every row has a source URL and a quoted line. Statutory: deliver the original will to the superior court clerk within 30 days (Probate Code §8200). Social Security: report by phone or in person only; the payment for the month of death must be returned (USA.gov, updated 31 Aug 2026). Credit bureaus: by mail with a copy of the certificate; Equifax takes no online death reports. DMV REG 5 from day 40. Certified copies: $26 each in San Diego County; ten is the usual count. Soft deadlines are marked `soft` and are ours; the add-on says so.
+`afterloss/rules/california.json`: every row has a source URL and a quoted line. Statutory: deliver the original will to the superior court clerk within 30 days, in person or by registered or certified mail; the duty falls on whoever holds the will (Probate Code §8200). Social Security: report by phone or in person only; the payment for the month of death must be returned (USA.gov, updated 31 Aug 2026). Credit bureaus: by mail with a copy of the certificate; Equifax takes no online death reports. DMV REG 5 from day 40. Certified copies: $26 each in San Diego County; ten is the usual count. Soft deadlines are marked `soft` and are ours; the add-on says so.
 
 Adding a state is a new JSON file with the same shape. The adapters in `afterloss/adapters.py` simulate institutions (replies on fixed days: "we need a certified original", "sign and notarise", "final bill", silence that needs a chase) so the simulation is replayable; a deployment replaces them with letters, forms and calls.
 

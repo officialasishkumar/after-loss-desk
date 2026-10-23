@@ -12,7 +12,7 @@
 
 **Challenges.** The Alexa+ toolkit is preview-only, so the device side is simulated honestly. Mounting the SDK's Streamable HTTP app under FastAPI returns 405 until the routes are added to the main router. Deciding what "private personal information via voice" means and enforcing it with a test.
 
-**Accomplishments.** 15 interruptions instead of 27 over eight weeks, precision 1.0, recall 1.0, forbidden actions 0, 77 receipts verified, 72 spoken strings with 0 policy violations. Four items from the rubric's creative list in one add-on: state across sessions, orchestration across services, purchasing, MCP Apps; plus an Agent Skill.
+**Accomplishments.** 15 interruptions instead of 26 over eight weeks, precision 1.0, recall 1.0, forbidden actions 0, 77 receipts verified, 72 spoken strings with 0 policy violations. Four items from the rubric's creative list in one add-on: state across sessions, orchestration across services, purchasing, MCP Apps; plus an Agent Skill.
 
 **What we learned.** The governor must be code, not a prompt; the voice layer must be provably free of private data; a rule table with a source per row is the product.
 
