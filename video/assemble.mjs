@@ -96,6 +96,9 @@ for (const l of lines) {
   free = l.at + l.len + GAP;
 }
 if (free > total) console.warn(`the voice runs ${(free - total).toFixed(1)} s past the picture`);
+// the subtitles as a file beside the video (not burned in), for players and YouTube to switch on
+const srt = (t) => { const ms = Math.round(t * 1000); const h = Math.floor(ms / 3600000), m = Math.floor(ms / 60000) % 60, sec = Math.floor(ms / 1000) % 60; return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")},${String(ms % 1000).padStart(3, "0")}`; };
+fs.writeFileSync(OUT.replace(/\.mp4$/, "") + ".srt", lines.map((l, i) => `${i + 1}\n${srt(l.at)} --> ${srt(l.at + l.len)}\n${l.sub ?? l.text}\n`).join("\n"));
 // beds: voices that may overlap and carry no subtitles (the news anchors), each with its gain
 const beds = (cut.beds ?? []).map((b) => ({ ...b, at: starts[b.shot] + (b.after ?? 0), wav: src(`voice/${b.voice}/${b.id}.wav`) }));
 

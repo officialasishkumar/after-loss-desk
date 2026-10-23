@@ -10,17 +10,21 @@ from pathlib import Path
 beats = Path(sys.argv[1])
 out = Path(sys.argv[2])
 voice = sys.argv[sys.argv.index("--voice") + 1] if "--voice" in sys.argv else "af_heart"
-ORDER = ["title", "problem", "open", "story", "desk", "record", "gates", "how", "end"]
+ORDER = ["intro", "open", "story", "desk", "record", "gates", "how", "end"]
 lines = json.loads((Path(__file__).parent / "lines.json").read_text())
 story = json.loads((beats / "story.json").read_text()) if (beats / "story.json").exists() else {}
 # the week advances about ten seconds before the hand-off (the reply is spoken in between); the recorder's own guess is rough
 if "handoff" in story:
     story["week"] = story["handoff"] - 10.0
-shots = [{"src": f"beats/{name}.mp4", **({"captions": True} if name in ("title", "problem", "gates", "end") else {})} for name in ORDER]
+# no burned-in subtitles: every shot carries its own captions; the assembler writes an .srt beside the video instead
+shots = [{"src": "intro.mp4" if name == "intro" else f"beats/{name}.mp4", "captions": True} for name in ORDER]
 cut_lines = []
 for line in lines:
-    i = ORDER.index(line["shot"])
+    shot = {"title": "intro", "problem": "intro"}.get(line["shot"], line["shot"])
+    i = ORDER.index(shot)
     after = line.get("after", 0.0)
+    if line["shot"] == "problem":
+        after = 9.4
     if "at" in line:
         after = max(0.0, story.get(line["at"], 0.0) - 0.2)
     cut_lines.append({"id": line["id"], "shot": i, "after": round(after, 2), "text": line["text"], "sub": line.get("sub", line["text"])})
