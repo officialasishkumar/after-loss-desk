@@ -25,8 +25,19 @@ SITE = ROOT / "site"
 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with mcp.session_manager.run():
+    # A session manager runs once per process; a second app start (tests, reloads) gets a fresh one on the same route.
+    try:
+        manager = mcp.session_manager.run()
+        await manager.__aenter__()
+    except RuntimeError:
+        from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
+        mcp._session_manager = StreamableHTTPSessionManager(app=mcp._mcp_server, event_store=None, json_response=True, stateless=True)
+        manager = mcp.session_manager.run()
+        await manager.__aenter__()
+    try:
         yield
+    finally:
+        await manager.__aexit__(None, None, None)
 
 
 app = FastAPI(title="After Loss Desk", lifespan=lifespan)
