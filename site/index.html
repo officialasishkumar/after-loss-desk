@@ -43,13 +43,14 @@
 <section id="view-echo" class="view" data-view="echo">
   <div class="echo-grid">
     <div class="echo-col">
-      <div class="device" id="device" data-state="idle">
+      <div class="stage" id="stage"><div class="device" id="device" data-state="idle">
+        <div class="glass" aria-hidden="true"></div>
         <div class="plate">
           <div class="plate-top"><span class="plate-time mono" id="plate-time">–</span><span class="plate-chip" id="plate-chip">After Loss Desk</span></div>
           <div class="card" id="card" aria-live="polite"><h1>Say what happened.</h1><p class="sub">"My husband died last week. There is a will. He had a bank account, a pension, life insurance, the power bill, a gym and a car."</p><button type="button" class="act" data-say="My husband died last week. There is a will. He had a bank account, a pension, life insurance, the power bill, a gym and a car.">Start with that</button></div>
           <div class="lightbar" aria-hidden="true"><i></i></div>
         </div>
-      </div>
+      </div><div class="stand" aria-hidden="true"></div><div class="shadow" aria-hidden="true"></div></div>
       <p class="speak" id="speak" aria-live="polite"></p>
       <form id="ask" class="ask" autocomplete="off">
         <button type="button" class="mic" id="mic" aria-label="Speak" title="Speak (Chrome)"><svg class="icon"><use href="#i-mic"/></svg></button>
@@ -99,6 +100,7 @@
   <div class="record">
     <header class="panel-h"><h2>The record</h2><span id="chain" class="chip"></span></header>
     <p class="muted">Every action the agent took, every reply, every decision: one receipt each, hash-chained. <a id="share-link" href="#" target="_blank" rel="noopener">The sibling's read-only page</a> shows statuses only.</p>
+    <div class="chain3d-wrap"><div class="chain3d" id="chain3d" hidden></div><p class="fine" id="chain3d-hover">Drag to orbit, wheel to zoom, hover a block for its receipt. Blocks are receipts in order; a diamond is a gate; the newest breathes.</p></div>
     <ol class="receipts" id="receipts"></ol>
   </div>
 </section>

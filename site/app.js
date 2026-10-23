@@ -168,6 +168,7 @@ async function refresh() {
   if (c.progress.share) $("share-link").href = c.progress.share;
   drawDaybar();
   if (state.view === "desk") renderDesk();
+  if (state.view === "record") mountRecord3d();
 }
 async function drawDaybar() {
   const r = await fetch(`/api/cases/${state.caseId}/timeline`); if (!r.ok) return;
@@ -273,8 +274,23 @@ $("edit-labels").addEventListener("click", () => {
 $("labels-cancel").addEventListener("click", () => $("labels-dlg").close());
 $("labels-dlg").querySelector("form").addEventListener("submit", async () => { const body = {}; $("labels").querySelectorAll("input[data-task]").forEach((i) => (body[i.dataset.task] = i.value)); await fetch(`/api/cases/${state.caseId}/labels`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); toast("Names saved (cards only)."); refresh(); });
 
+// ---------- 3D: the device tilts toward the pointer; the record is a chain of blocks ----------
+const stage = $("stage"), dev = $("device");
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (!reduced) {
+  stage.addEventListener("pointermove", (e) => { const b = stage.getBoundingClientRect(); const px = (e.clientX - b.left) / b.width - 0.5, py = (e.clientY - b.top) / b.height - 0.5; dev.style.setProperty("--ry", `${(px * 10).toFixed(2)}deg`); dev.style.setProperty("--rx", `${(-py * 8).toFixed(2)}deg`); dev.style.setProperty("--gl", Math.abs(px).toFixed(2)); });
+  stage.addEventListener("pointerleave", () => { dev.style.setProperty("--ry", "0deg"); dev.style.setProperty("--rx", "0deg"); dev.style.setProperty("--gl", "0"); });
+}
+let chain = null;
+async function mountRecord3d() {
+  if (!state.snapshot || reduced) return;
+  const { mountChain } = await import("/chain3d.js");
+  chain?.dispose();
+  chain = await mountChain($("chain3d"), state.snapshot.receipts, state.snapshot.chain_ok, (r) => { $("chain3d-hover").textContent = r ? `#${r.seq} · ${r.day} · ${r.actor} · ${r.action}${r.task_id ? " · " + r.task_id : ""}${r.note ? " · " + r.note : ""}` : "Drag to orbit, wheel to zoom, hover a block for its receipt."; });
+}
+
 // ---------- pages, theme, keys, toast ----------
-function go(view) { state.view = view; document.querySelectorAll(".view").forEach((v) => (v.hidden = v.dataset.view !== view)); document.querySelectorAll(".tabs a").forEach((a) => a.classList.toggle("on", a.dataset.view === view)); if (location.hash !== "#" + view) history.replaceState(null, "", `${location.search}#${view}`); if (view === "desk") renderDesk(); }
+function go(view) { state.view = view; document.querySelectorAll(".view").forEach((v) => (v.hidden = v.dataset.view !== view)); document.querySelectorAll(".tabs a").forEach((a) => a.classList.toggle("on", a.dataset.view === view)); if (location.hash !== "#" + view) history.replaceState(null, "", `${location.search}#${view}`); if (view === "desk") renderDesk(); if (view === "record") mountRecord3d(); else { chain?.dispose(); chain = null; } }
 window.addEventListener("hashchange", () => go(location.hash.slice(1) || "echo"));
 $("theme").addEventListener("click", () => { const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); const next = cur === "light" ? "dark" : "light"; document.documentElement.dataset.theme = next; try { localStorage.setItem("ald-theme", next); } catch {} $("theme").innerHTML = icon(next === "light" ? "i-moon" : "i-sun"); });
 document.addEventListener("keydown", (e) => { if (e.target.closest("input,textarea") || e.metaKey || e.ctrlKey) return; const k = e.key.toLowerCase(); if (k === "n") advance(1); else if (k === "w") advance(7); else if (k === "1") go("echo"); else if (k === "2") go("desk"); else if (k === "3") go("record"); else if (k === "4") go("how"); else if (k === "a" && state.view === "desk" && state.lastDecision) { const t = state.snapshot?.due.decisions[state.deskIndex]; if (t) confirmStep(t.id, { title: t.summary }); } });
