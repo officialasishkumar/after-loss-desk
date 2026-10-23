@@ -107,7 +107,30 @@
 
 <!-- ============ HOW ============ -->
 <section id="view-how" class="view" data-view="how" hidden>
+  <div class="hero">
+    <p class="eyebrow">Build, Ship, Shape: Amazon Developer Hackathon 2026 · Alexa+ track</p>
+    <h1 class="hero-h">The executor is alone with 500 hours of paperwork. <span class="grad">The desk isn't.</span></h1>
+    <p class="hero-p">About 3.1 million Americans die a year. The person left to settle their affairs tells banks, insurers, pensions, utilities, credit bureaus and Social Security, chases replies, and buys certified copies again and again, for about eighteen months. Almost none of it needs judgement. It needs persistence, a list, and someone to ask at the five moments that are hers.</p>
+    <div class="hero-stats"><div><b>3.09M</b><span>deaths a year (CDC, 2025)</span></div><div><b>500 h</b><span>of admin per executor (Empathy, 2026)</span></div><div><b>18 mo</b><span>to wind down (Empathy, 2026)</span></div><div><b>15 of 27</b><span>asks kept, out of a confirm-everything 27</span></div></div>
+    <div class="gates3d" aria-label="The five gates">
+      <div class="g"><b>D1</b><span>money leaves the estate</span></div><div class="g"><b>D2</b><span>an original leaves her hands</span></div><div class="g"><b>D3</b><span>her signature or a visit</span></div><div class="g"><b>D4</b><span>anything irreversible</span></div><div class="g"><b>D5</b><span>an heir objects</span></div>
+    </div>
+    <p class="fine center">Everything else is clerical and runs on one standing authorisation, receipted.</p>
+  </div>
   <div class="how">
+    <h2>Architecture</h2>
+    <svg class="arch" viewBox="0 0 960 330" role="img" aria-label="Architecture: Alexa+ calls MCP tools; the ledger engine, five-gate governor, drafts and checkout write to a hash-chained case store; a sibling reads a progress page">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5 0 10z" fill="currentColor"/></marker></defs>
+      <g class="box alexa"><rect x="20" y="120" width="170" height="90" rx="12"/><text x="105" y="155">Alexa+ / Echo</text><text x="105" y="178" class="sm">or the simulated client</text><text x="105" y="196" class="sm">speech in, speak + card out</text></g>
+      <g class="box"><rect x="250" y="120" width="190" height="90" rx="12"/><text x="345" y="155">MCP server</text><text x="345" y="178" class="sm">8 tools · spec 2025-11-25</text><text x="345" y="196" class="sm">Streamable HTTP · MCP App card</text></g>
+      <g class="box"><rect x="500" y="20" width="200" height="60" rx="12"/><text x="600" y="47">Ledger engine</text><text x="600" y="67" class="sm">rule table + date arithmetic</text></g>
+      <g class="box needs"><rect x="500" y="100" width="200" height="60" rx="12"/><text x="600" y="127">Five-gate governor</text><text x="600" y="147" class="sm">before every action · one card per gate</text></g>
+      <g class="box"><rect x="500" y="180" width="200" height="60" rx="12"/><text x="600" y="207">Drafts + adapters</text><text x="600" y="227" class="sm">templates filled by code · chases</text></g>
+      <g class="box alexa"><rect x="500" y="260" width="200" height="60" rx="12"/><text x="600" y="287">Alexa+ checkout</text><text x="600" y="307" class="sm">/checkout-sessions · Idempotency-Key</text></g>
+      <g class="box done"><rect x="760" y="100" width="180" height="100" rx="12"/><text x="850" y="135">Case store</text><text x="850" y="158" class="sm">SQLite · months of state</text><text x="850" y="178" class="sm">hash-chained receipts</text></g>
+      <g class="box"><rect x="760" y="240" width="180" height="60" rx="12"/><text x="850" y="267">Sibling's page</text><text x="850" y="287" class="sm">read-only statuses</text></g>
+      <g class="arrows"><path d="M190 165H250"/><path d="M440 150L500 60"/><path d="M440 160L500 130"/><path d="M440 170L500 205"/><path d="M440 180L500 285"/><path d="M700 50L760 120"/><path d="M700 130H760"/><path d="M700 210L760 180"/><path d="M700 290L760 180"/><path d="M850 200V240"/></g>
+    </svg>
     <h2>How it works</h2>
     <ol class="pipeline">
       <li><span><b>Six answers by voice.</b> Relationship, state, will or not, which kinds of accounts. Closed lists, no names, no numbers.</span></li>
