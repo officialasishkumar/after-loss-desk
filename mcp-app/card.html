@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>After Loss Desk</title>
 <style>
-:root{--ink:#15202b;--muted:#5b6672;--line:#e3e8ee;--accent:#2a5bd7;--ok:#1f8a52;--warn:#b7791f;font-size:20px}
-@media (prefers-color-scheme:dark){:root{--ink:#eef2f6;--muted:#aab4bf;--line:#2b3542;--accent:#7aa2ff}}
-body{margin:0;padding:16px;font:1rem/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:transparent}
-h1{font-size:1.6rem;margin:0 0 .3rem}.muted{color:var(--muted)}.row{display:flex;justify-content:space-between;gap:12px;padding:.45rem 0;border-top:1px solid var(--line)}
-.row:first-of-type{border-top:0}.row b{white-space:nowrap}.gate{display:inline-block;padding:.1rem .5rem;border-radius:999px;background:var(--accent);color:#fff;font-size:.8rem}
-button{font:inherit;padding:.6rem 1.1rem;border-radius:10px;border:0;background:var(--accent);color:#fff;margin-top:.8rem}button.alt{background:transparent;border:1px solid var(--line);color:var(--ink)}
-pre{white-space:pre-wrap;font:.85rem/1.4 ui-monospace,Menlo,monospace;background:rgba(127,127,127,.08);padding:.6rem;border-radius:8px}.fine{font-size:.75rem}
+:root{--ink:#15202b;--muted:#5b6672;--line:#e3e8ee;--alexa:#2a62d6;--needs:#a86d00;--needs-bg:rgba(168,109,0,.12);--done:#1f8a52;--sim:#6b3fd4;font-size:20px}
+@media (prefers-color-scheme:dark){:root{--ink:#eef2f6;--muted:#aab4bf;--line:#2b3542;--alexa:#3d8cff;--needs:#f0b429;--needs-bg:rgba(240,180,41,.14);--done:#3ecf8e}}
+body{margin:0;padding:16px;font:1rem/1.45 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:transparent}
+h1{font-size:1.6rem;margin:0 0 .3rem;letter-spacing:-.01em}.muted{color:var(--muted)}.row{display:flex;justify-content:space-between;gap:12px;padding:.45rem 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}.row b{white-space:nowrap;font-weight:500;color:var(--muted)}.gate{display:inline-block;padding:.1rem .5rem;border-radius:999px;background:var(--needs);color:#1a1200;font-size:.8rem;font-weight:700;margin-right:.3rem}
+button{font:inherit;padding:.6rem 1.1rem;border-radius:10px;border:0;background:var(--alexa);color:#fff;margin:.8rem .4rem 0 0;cursor:pointer}button.alt{background:transparent;border:1px solid var(--line);color:var(--ink)}
+pre{white-space:pre-wrap;font:.85rem/1.4 "IBM Plex Mono",ui-monospace,Menlo,monospace;background:rgba(127,127,127,.08);padding:.6rem;border-radius:8px}.fine{font-size:.75rem}.ok{color:var(--done)}
 </style></head><body><div id="card"><h1>After Loss Desk</h1><p class="muted">Waiting for the tool result.</p></div>
 <script>
 // MCP Apps (spec 2026-01-26): the host loads this ui:// resource for every tool that names it in _meta.ui.resourceUri,

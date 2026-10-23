@@ -12,9 +12,20 @@ After Loss Desk is an **Alexa+ add-on** (an MCP server, spec 2025-11-25, Streama
 
 Built for **Build, Ship, Shape: Amazon Developer Hackathon 2026**, Alexa+ track, by Asish Kumar and Akash Kumar. MIT.
 
-![Demo: start a case, allow routine notices, order certified copies through checkout, a week passes, three gates, progress](docs/demo.gif)
+## See it in 60 seconds
 
-- **Try it:** `uv run afterloss serve` → http://127.0.0.1:8300 (the page is a real MCP client standing in for Alexa+, labelled as such). MCP endpoint: `/mcp`. Agent Skill: [SKILL.md](SKILL.md). MCP App card: `ui://afterloss/card.html`.
+The Echo: the card the executor sees across the room and the words she hears, with the case's day bar underneath. The Desk on a phone: check before you approve, then hold to approve. The record: every receipt as a block in a hash-chained 3D chain.
+
+| The Echo (1440) | The Desk (phone-width) | The record |
+|---|---|---|
+| ![The Echo: a decision card, the ledger and the day bar](docs/img/echo-1440.jpg) | ![The Desk: check before you approve, hold to approve](docs/img/desk-1440.jpg) | ![The record: receipt blocks in a 3D chain](docs/img/record-1440.jpg) |
+
+![The pitch: the executor is alone with 500 hours of paperwork; the desk isn't](docs/img/pitch-1440.jpg)
+
+Animated walk of an earlier build: [docs/demo.gif](docs/demo.gif).
+
+- **Try it:** `uv run afterloss serve` → http://127.0.0.1:8300. Four pages: **Echo** (the card and the voice, a 3D device that tilts to the pointer, the day bar), **Desk** (check before you approve, hold to approve, decline with a reason, the receipt), **Record** (every receipt, as a list and as a WebGL chain), **How it works** (the pitch, the architecture, the live scoreboard). The page is a real MCP client standing in for Alexa+ and says so in its frame strip. MCP endpoint: `/mcp`. Agent Skill: [SKILL.md](SKILL.md). MCP App card: `ui://afterloss/card.html`.
+- **Design:** one meaning per colour, never colour alone (every state has a shape and a word), IBM Plex self-hosted, light and dark, keyboard shortcuts, reduced-motion respected. Tokens in `site/tokens.css`.
 - **The measured claim:** `uv run afterloss simulate --weeks 8` (below). **The pitch:** [docs/PITCH.md](docs/PITCH.md). **Against the rubric:** [docs/JUDGING.md](docs/JUDGING.md). **Policy mapping:** [docs/POLICY.md](docs/POLICY.md). **Friction log:** [docs/FRICTION.md](docs/FRICTION.md).
 
 ## How it works
@@ -63,7 +74,7 @@ A confirm-everything agent would have asked 27 times. After Loss Desk asked 15, 
 ```bash
 uv sync
 uv run afterloss serve            # web client + MCP endpoint + checkout endpoints on :8300 (PORT to change)
-uv run pytest                     # 18 tests: ledger, governor, checkout idempotency, voice policy, web endpoints, a real MCP client over Streamable HTTP, the simulation
+uv run pytest                     # 21 tests: ledger, governor, checkout idempotency, voice policy, web endpoints, a real MCP client over Streamable HTTP, the simulation
 uv run afterloss simulate --weeks 8
 uv run afterloss policy-check
 ```
