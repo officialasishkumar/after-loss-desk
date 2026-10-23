@@ -94,6 +94,43 @@ def get_case(case_id: str):
             "chain_ok": governor.verify_chain(case), "receipts": case["receipts"][-30:], "originals_on_hand": case.get("originals_on_hand", 0)}
 
 
+@app.get("/api/cases/{case_id}/timeline")
+def timeline(case_id: str):
+    return engine.timeline(_case(case_id))
+
+
+@app.get("/api/cases/{case_id}/decisions/{decision_id}")
+def decision(case_id: str, decision_id: str):
+    d = engine.decision_detail(_case(case_id), decision_id)
+    if not d:
+        raise HTTPException(404, "no such decision")
+    return d
+
+
+@app.get("/api/scoreboard")
+def scoreboard():
+    """Run the eight-week simulation now (under a second) and return the scoreboard the README quotes."""
+    import io
+    import os
+    import tempfile
+    from contextlib import redirect_stdout
+    from .simulate import run
+    old = os.environ.get("AFTERLOSS_DB")
+    with tempfile.TemporaryDirectory() as tmp:
+        os.environ["AFTERLOSS_DB"] = os.path.join(tmp, "sim.sqlite3")
+        buf = io.StringIO()
+        try:
+            with redirect_stdout(buf):
+                code = run(weeks=8, verbose=True)
+        finally:
+            if old is None:
+                os.environ.pop("AFTERLOSS_DB", None)
+            else:
+                os.environ["AFTERLOSS_DB"] = old
+    rows = [line.rsplit("  ", 1) for line in buf.getvalue().splitlines() if "  " in line]
+    return {"ok": code == 0, "rows": [{"key": k.strip(), "value": v.strip()} for k, v in rows]}
+
+
 @app.post("/api/cases/{case_id}/advance")
 async def advance(case_id: str, request: Request):
     body = await request.json()

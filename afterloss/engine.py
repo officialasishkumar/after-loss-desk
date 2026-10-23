@@ -230,3 +230,35 @@ def progress_card(case: dict[str, Any]) -> dict[str, Any]:
             "parked": len(governor.open_decisions(case)), "total": total, "missed": [t["title"] for t in ledger.missed_deadlines(case)],
             "receipts": len(case["receipts"]), "chain_ok": governor.verify_chain(case),
             "recent": [{"day": r["day"], "who": r["actor"], "what": r["action"], "note": r["note"][:80]} for r in case["receipts"][-8:]]}
+
+
+def timeline(case: dict[str, Any]) -> dict[str, Any]:
+    """Day-by-day story for the day bar: what arrived, what was raised, what was decided, what is due."""
+    from collections import defaultdict
+    days: dict[str, list[dict[str, str]]] = defaultdict(list)
+    for r in case["receipts"]:
+        kind = {"reply": "reply", "delivered": "reply", "raise": "gate", "approve": "decision", "decline": "decision", "objection": "heir", "objection_withdrawn": "heir"}.get(r["action"].split(":")[0])
+        if r["action"].startswith("execute:"):
+            kind = "sent"
+        if kind:
+            days[r["day"]].append({"kind": kind, "what": r["note"] or r["action"], "task_id": r["task_id"] or ""})
+    for t in case["tasks"]:
+        if t["deadline"] and t["status"] not in ("done", "cancelled"):
+            days[t["deadline"]].append({"kind": "deadline", "what": t["spoken"], "task_id": t["id"]})
+    return {"start": case["date_of_death"], "today": case["today"], "days": [{"day": d, "events": e} for d, e in sorted(days.items())]}
+
+
+def decision_detail(case: dict[str, Any], decision_id: str) -> dict[str, Any] | None:
+    """Everything the Desk shows before an approval: the gate, the task, what it needs, the date, the source, the text."""
+    d = next((x for x in case["decisions"] if x["id"] == decision_id), None)
+    if not d:
+        return None
+    task = next(t for t in case["tasks"] if t["id"] == d["task_id"])
+    text = (task.get("last_draft") or drafts.draft(case, task))["text"] if d["gate"] != "D0" else d["detail"]
+    return {"decision": d, "task": {"id": task["id"], "title": task["title"], "label": task["label"], "channel": task["channel"], "deadline": task["deadline"],
+                                    "deadline_kind": task["deadline_kind"], "days_left": _days_left(task, case["today"]), "needs_original": task["needs_original"],
+                                    "legal": task["legal"], "source": task["source"], "history": task["history"][-3:]},
+            "originals_on_hand": case.get("originals_on_hand", 0), "text": text, "text_lines": len(text.splitlines()),
+            "written_by": "code" if not (task.get("last_draft") or {}).get("polished_by_model") else "model, checked by code",
+            "position": [i for i, x in enumerate(governor.open_decisions(case)) if x["id"] == decision_id][0] + 1 if d["status"] == "raised" else None,
+            "of": len(governor.open_decisions(case))}

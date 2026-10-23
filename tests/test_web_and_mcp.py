@@ -40,7 +40,14 @@ def test_checkout_endpoints_follow_the_documented_shape_and_idempotency():
         assert page.status_code == 200 and page.json()["chain_ok"]
         share = c.get(f"/share/{case['share_token']}")
         assert share.status_code == 200 and "Read-only" in share.text and "First Federal" not in share.text
-        assert c.get("/").status_code == 200 and "Simulated Alexa+ add-on" in c.get("/").text
+        assert c.get("/").status_code == 200 and "Simulated Alexa+" in c.get("/").text
+        tl = c.get(f"/api/cases/{case['id']}/timeline").json()
+        assert tl["today"] == case["today"] and any(e["kind"] == "deadline" for d in tl["days"] for e in d["events"])
+        d0 = next(d for d in case["decisions"] if d["gate"] == "D0")
+        det = c.get(f"/api/cases/{case['id']}/decisions/{d0['id']}").json()
+        assert det["decision"]["gate"] == "D0" and det["task"]["source"]["url"].startswith("http") and det["position"] == 1
+        sb = c.get("/api/scoreboard").json()
+        assert sb["ok"] and any(r["key"] == "decision recall" and r["value"] == "1.0" for r in sb["rows"])
 
 
 def free_port() -> int:
