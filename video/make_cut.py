@@ -17,7 +17,8 @@ story = json.loads((beats / "story.json").read_text()) if (beats / "story.json")
 if "handoff" in story:
     story["week"] = story["handoff"] - 10.0
 # no burned-in subtitles: every shot carries its own captions; the assembler writes an .srt beside the video instead
-shots = [{"src": "intro.mp4" if name == "intro" else f"beats/{name}.mp4", "captions": True} for name in ORDER]
+TRIM = {"intro": {"to": 31.0}, "open": {"from": 0.8}, "desk": {"to": 18.6}, "record": {"to": 16.4}}
+shots = [{"src": "intro.mp4" if name == "intro" else f"beats/{name}.mp4", "captions": True, **TRIM.get(name, {})} for name in ORDER]
 cut_lines = []
 for line in lines:
     shot = {"title": "intro", "problem": "intro"}.get(line["shot"], line["shot"])

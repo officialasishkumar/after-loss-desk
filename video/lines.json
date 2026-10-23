@@ -87,8 +87,8 @@
     "id": "l13",
     "shot": "how",
     "after": 0.4,
-    "text": "Eight simulated weeks, scored against a ground truth written before the run. Fifteen interruptions instead of twenty-seven. Precision one, recall one, zero forbidden actions, and every spoken string checked for private data.",
-    "sub": "Eight simulated weeks, scored against a ground truth written before the run. Fifteen interruptions instead of twenty-seven. Precision one, recall one, zero forbidden actions, and every spoken string checked for private data."
+    "text": "Eight simulated weeks, scored against a ground truth written before the run. Fifteen interruptions instead of twenty-six. Precision one, recall one, zero forbidden actions, and every spoken string checked for private data.",
+    "sub": "Eight simulated weeks, scored against a ground truth written before the run. Fifteen interruptions instead of twenty-six. Precision one, recall one, zero forbidden actions, and every spoken string checked for private data."
   },
   {
     "id": "l14",
