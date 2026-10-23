@@ -5,11 +5,11 @@ The card: *17 open, 0 done. You will need about 8 certified copies.* The voice: 
 
 **0:35** "Order the certificates." *7 certified copies, $195.95 at the county's fee. Alexa will confirm the payment with you.* The Alexa+ checkout handoff: confirmation, payment instrument, PIN stay with Alexa; the add-on's `/checkout-sessions/{id}/complete` is called twice with the same `Idempotency-Key` and the log shows the second call replayed, not re-charged.
 
-**1:05** Day 6 (the Next day button stands in for a week passing). Three cards wait: the bank wants a certified original (D2), the pension wants a notarised form (D3), the power company's final bill of $142.17 (D1). She approves the first two by voice, declines the bill ("I will pay it myself"). The agent leaves it with her and writes that down.
+**1:05** Day 6 (the day bar's +7 stands in for a week passing; the bar shows the replies that arrived and the gates they raised). Three cards wait: the bank wants a certified original (D2), the pension wants a notarised form (D3), the power company's final bill of $142.17 (D1). She opens the Desk on her phone: Check before you approve (task, what it needs, the date, the rule with its source), the text written by code, then she holds to approve. She declines the bill ("I will pay it myself"). The agent leaves it with her and writes that down.
 
 **1:45** Day 12. Her brother objects to selling the car. One card (D5): *hold it until you agree?* "Approve." Day 30: they agreed; the hold lifts; day 40 the DMV signature card (D3) appears on its own. Meanwhile the gym never answered: the agent re-sent by certified mail without asking (clerical), and the receipts show it.
 
-**2:20** "How far along are we?" *16 of 17 done, 1 waiting on replies, 0 waiting on you.* The sibling's read-only page opens on a phone: statuses only, no documents, no numbers.
+**2:20** The Record: 24 receipts as a chain of blocks, the newest breathing, chain intact. "How far along are we?" *16 of 17 done, 1 waiting on replies, 0 waiting on you.* The sibling's read-only page opens on a phone: statuses only, no documents, no numbers.
 
 **2:40** The scoreboard from `afterloss simulate --weeks 8`: 15 interruptions instead of 27, precision 1.0, recall 1.0, forbidden actions 0, 77 receipts, chain verified, 72 spoken strings, 0 policy violations. Then the policy test that greps every spoken string.
 
