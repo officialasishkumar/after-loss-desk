@@ -30,3 +30,19 @@ def test_mcp_app_card_follows_the_apps_protocol_names():
     card = (ROOT / "mcp-app" / "card.html").read_text()
     for name in ("ui/initialize", "ui/notifications/initialized", "ui/notifications/tool-result", "tools/call"):
         assert name in card
+
+
+def test_no_middle_dot_in_project_text():
+    dot = chr(0xB7)
+    banned = (dot, "&" + "middot;", "&#" + "183;", "\\" + "u00b7", "\\" + "xb7")
+    skip = {".woff2", ".woff", ".gif", ".jpg", ".jpeg", ".png", ".sqlite3", ".pyc", ".ico"}
+    hits = []
+    for base in ("site", "mcp-app", "docs", "afterloss", "tests"):
+        for p in (ROOT / base).rglob("*"):
+            if p.is_file() and p.suffix.lower() not in skip:
+                text = p.read_text(errors="ignore")
+                hits += [f"{p.relative_to(ROOT)}: {b!r}" for b in banned if b in text]
+    for p in ROOT.glob("*.md"):
+        text = p.read_text(errors="ignore")
+        hits += [f"{p.name}: {b!r}" for b in banned if b in text]
+    assert not hits, hits

@@ -23,4 +23,13 @@ The card: *17 open, 0 done. You will need about 8 certified copies.* The voice: 
 
 Empathy (app plus care team, sold through insurers), Settld (UK, one form notifies 750 companies), Alix, Heirloom and The Drive cover the task list and document reading on the web. Postscript (an entry in AWS's Agents for Humans hackathon, Sep 2026) is the closest build: a background executor's agent with policy gates and a measured simulation on Strands and AgentCore. After Loss Desk differs in surface (voice at home, cards across the room), in the purchase (certified copies through Alexa+ checkout), in the household (the sibling's page), and in being built to the Alexa+ policy (no private data by voice). None is on Alexa+.
 
-Sources: https://cdc.gov/nchs/blog/posts/2026/07/provisional-data-u-s-death-rate-fell-to-a-record-low-in-2025.html · https://www.insurancebusinessmag.com/us/news/benefits/bereavement-benefits-emerge-as-a-gap-brokers-can-fill-in-2026-588924.aspx · https://www.empathy.com/blog/what-loss-really-costs-key-takeaways-from-the-grief-tax · https://www.usa.gov/social-security-report-a-death · https://www.elayne.com/resources/how-to-notify-equifax-of-a-death · https://www.sandiegocounty.gov/hhsa/programs/phs/office_of_vital_records_and_statistics/death_certificates.html · https://developer.amazon.com/docs/alexaplus/add-ons/implement-checkout-endpoints.html · https://github.com/Abhinav0905/AWS-Agents-For-Human
+Sources:
+
+- https://cdc.gov/nchs/blog/posts/2026/07/provisional-data-u-s-death-rate-fell-to-a-record-low-in-2025.html
+- https://www.insurancebusinessmag.com/us/news/benefits/bereavement-benefits-emerge-as-a-gap-brokers-can-fill-in-2026-588924.aspx
+- https://www.empathy.com/blog/what-loss-really-costs-key-takeaways-from-the-grief-tax
+- https://www.usa.gov/social-security-report-a-death
+- https://www.elayne.com/resources/how-to-notify-equifax-of-a-death
+- https://www.sandiegocounty.gov/hhsa/programs/phs/office_of_vital_records_and_statistics/death_certificates.html
+- https://developer.amazon.com/docs/alexaplus/add-ons/implement-checkout-endpoints.html
+- https://github.com/Abhinav0905/AWS-Agents-For-Human

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>After Loss Desk</title>
-<style>
+<style>.meta{display:flex;flex-wrap:wrap;gap:.15rem .8rem}.lab{display:block;font-size:.8rem}
 :root{--ink:#15202b;--muted:#5b6672;--line:#e3e8ee;--alexa:#2a62d6;--needs:#a86d00;--needs-bg:rgba(168,109,0,.12);--done:#1f8a52;--sim:#6b3fd4;font-size:20px}
 @media (prefers-color-scheme:dark){:root{--ink:#eef2f6;--muted:#aab4bf;--line:#2b3542;--alexa:#3d8cff;--needs:#f0b429;--needs-bg:rgba(240,180,41,.14);--done:#3ecf8e}}
 body{margin:0;padding:16px;font:1rem/1.45 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:transparent}
@@ -24,17 +24,17 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&l
 function render(result){
   const c = result && result.card; const el = document.getElementById("card"); if (!c) { el.innerHTML = "<h1>After Loss Desk</h1><p class='muted'>" + esc(result && (result.speak || result.error)) + "</p>"; return; }
   let h = "<h1>" + esc(c.title) + "</h1>";
-  if (c.kind === "ledger") { h += `<p class="muted">${esc(c.state)} · as of ${esc(c.today)} · ${c.originals_needed} certified copies needed, ${c.originals_on_hand} on hand</p>`;
-    h += c.rows.filter(r => r.status !== "done").slice(0, 6).map(r => `<div class="row"><span>${esc(r.title)}${r.label ? " <span class='muted'>· " + esc(r.label) + "</span>" : ""}</span><b>${r.days_left == null ? "" : r.days_left + " d"}</b></div>`).join("");
+  if (c.kind === "ledger") { h += `<p class="muted meta"><span>${esc(c.state)}</span><span>As of ${esc(c.today)}</span><span>${c.originals_needed} certified copies needed, ${c.originals_on_hand} on hand</span></p>`;
+    h += c.rows.filter(r => r.status !== "done").slice(0, 6).map(r => `<div class="row"><span>${esc(r.title)}${r.label ? "<span class='muted lab'>" + esc(r.label) + "</span>" : ""}</span><b>${r.days_left == null ? "" : r.days_left + " d"}</b></div>`).join("");
     if (c.action && c.action.decision_id) h += `<button data-tool="approve" data-arg='${esc(JSON.stringify({ case_id: result.case_id, decision_id: c.action.decision_id }))}'>${esc(c.action.label)}</button>`; }
   else if (c.kind === "due") { h += c.decisions.map(d => `<div class="row"><span><span class="gate">${esc(d.gate)}</span> ${esc(d.summary)}<br><span class="muted fine">${esc(d.detail)}</span></span></div>
     <button data-tool="approve" data-arg='${esc(JSON.stringify({ case_id: result.case_id, decision_id: d.id }))}'>Approve</button> <button class="alt" data-tool="decline" data-arg='${esc(JSON.stringify({ case_id: result.case_id, decision_id: d.id }))}'>Decline</button>`).join("");
-    h += c.items.slice(0, 5).map(i => `<div class="row"><span>${esc(i.title)}${i.label ? " <span class='muted'>· " + esc(i.label) + "</span>" : ""}</span><b>${i.days_left == null ? "" : i.days_left + " d"}</b></div>`).join("");
+    h += c.items.slice(0, 5).map(i => `<div class="row"><span>${esc(i.title)}${i.label ? "<span class='muted lab'>" + esc(i.label) + "</span>" : ""}</span><b>${i.days_left == null ? "" : i.days_left + " d"}</b></div>`).join("");
     if (c.waiting.length) h += `<p class="muted fine">Waiting on ${c.waiting.length} repl${c.waiting.length === 1 ? "y" : "ies"}.</p>`; }
-  else if (c.kind === "draft") { h += `<p class="muted">${esc(c.label || "")} · ${esc(c.channel)}</p><pre>${esc(c.text)}</pre><p class="fine muted">Source: ${esc(c.source && c.source.url)}</p>`; }
+  else if (c.kind === "draft") { h += `<p class="muted meta">${c.label ? `<span>${esc(c.label)}</span>` : ""}<span>${esc(c.channel)}</span></p><pre>${esc(c.text)}</pre><p class="fine muted">Source: ${esc(c.source && c.source.url)}</p>`; }
   else if (c.kind === "quote") { h += `<div class="row"><span>${c.count} × $${Number(c.unit_price).toFixed(2)} + $${Number(c.processing).toFixed(2)} processing</span><b>$${Number(c.total).toFixed(2)}</b></div><p class="muted fine">${esc(c.fee_note)}</p>`;
     if (c.session_id) h += `<p class="muted">Alexa+ confirms the payment on your device (payment instrument and PIN stay with Alexa).</p>`; }
-  else if (c.kind === "progress") { h += `<div class="row"><span>Waiting on replies</span><b>${c.waiting}</b></div><div class="row"><span>Waiting on you</span><b>${c.parked}</b></div><div class="row"><span>Receipt chain</span><b>${c.chain_ok ? "intact" : "broken"} · ${c.receipts}</b></div>`;
+  else if (c.kind === "progress") { h += `<div class="row"><span>Waiting on replies</span><b>${c.waiting}</b></div><div class="row"><span>Waiting on you</span><b>${c.parked}</b></div><div class="row"><span>Receipt chain</span><b>${c.chain_ok ? "intact" : "broken"}</b></div><div class="row"><span>Receipts</span><b>${c.receipts}</b></div>`;
     if (c.share_url) h += `<p class="fine muted">${esc(c.share_url)}</p>`; }
   el.innerHTML = h;
   el.querySelectorAll("button[data-tool]").forEach(b => b.addEventListener("click", async () => { b.disabled = true; const r = await request("tools/call", { name: b.dataset.tool, arguments: JSON.parse(b.dataset.arg) }); render((r && r.structuredContent) || parse(r)); }));
