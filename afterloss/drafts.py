@@ -70,7 +70,7 @@ def draft(case: dict[str, Any], task: dict[str, Any]) -> dict[str, Any]:
     elif task["channel"] == "mail":
         text = letter(case, task)
     elif task["channel"] == "in_person":
-        text = f"Take {('the original will' if task['rule'] == 'will_deliver' else 'the signed form and a certified copy')} in person. Keep the stamped receipt.\nRule: {task['source']['quote']}\nSource: {task['source']['url']}"
+        text = f"{('Take the original will to the clerk in person, or send it by registered or certified mail.' if task['rule'] == 'will_deliver' else 'Take the signed form and a certified copy in person.')} Keep the stamped receipt.\nRule: {task['source']['quote']}\nSource: {task['source']['url']}"
     elif task["channel"] == "checkout":
         text = "Order certified copies through Alexa+ checkout; the county mails them."
     else:

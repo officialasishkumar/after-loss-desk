@@ -34,7 +34,7 @@ def _summary_for(task: dict[str, Any], gate: str) -> tuple[str, str]:
     if gate == "D1":
         return (f"Money needs to go out for {sp}.", f"{task['title']}. {task['history'][-1]['text'] if task['history'] else ''}".strip())
     if gate == "D2" and task["rule"] == "will_deliver":
-        return (f"The original will has to leave your hands: {sp}.", f"{task['title']}, in person, within the statutory 30 days. Keep the clerk's stamped receipt. {task['source']['quote']}")
+        return (f"The original will has to leave your hands: {sp}.", f"{task['title']}, in person or by registered or certified mail, within the statutory 30 days. Keep the clerk's stamped receipt. {task['source']['quote']}")
     if gate == "D2":
         return (f"A certified original has to leave your hands for {sp}.", f"{task['title']}. Send one certified original by tracked mail; keep the tracking number on the card.")
     if gate == "D3":

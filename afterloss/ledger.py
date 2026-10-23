@@ -93,6 +93,48 @@ def due(case: dict[str, Any], as_of: str | None = None, horizon_days: int = 7) -
     return sorted(out, key=lambda t: (t["days_left"] is None, t["days_left"] if t["days_left"] is not None else 0))
 
 
-def missed_deadlines(case: dict[str, Any]) -> list[dict[str, Any]]:
-    today = date.fromisoformat(case["today"])
-    return [t for t in case["tasks"] if t["deadline"] and t["status"] not in ("done", "cancelled") and date.fromisoformat(t["deadline"]) < today]
+ORDER_BY_CHANNELS = ("checkout",)  # the date on these is an order-by date: the mail that follows is not ours to be late on
+
+
+def acted_on(case: dict[str, Any], task: dict[str, Any]) -> str | None:
+    """The first day the desk or the executor did something on this task: the first executed action in the receipt chain,
+    or the day it was marked done. A notice sent, a copy ordered or a form signed counts; waiting for a reply does not undo it."""
+    days = [r["day"] for r in case["receipts"] if r["task_id"] == task["id"] and r["actor"] in ("agent", "executor") and r["action"].startswith("execute:")]
+    if task.get("done_on"):
+        days.append(task["done_on"])
+    return min(days) if days else None
+
+
+def missed_deadlines(case: dict[str, Any], as_of: str | None = None) -> list[dict[str, Any]]:
+    """Tasks whose date went by before anything was done on them: still untouched after the date, or first acted on after it.
+    A notice sent on time that is waiting for a reply, or copies ordered on their due day, are met. A soft task the executor
+    declined and took over ("held") is hers now, not counted; a held statutory task stays on the list until it is marked done."""
+    today = as_of or case["today"]
+    out = []
+    for t in case["tasks"]:
+        dl = t["deadline"]
+        if not dl or t["status"] == "cancelled":
+            continue
+        acted = acted_on(case, t)
+        if acted is not None and acted <= dl:
+            continue
+        if acted is None and (dl >= today or (t["status"] == "held" and t["deadline_kind"] != "statutory")):
+            continue
+        out.append(t)
+    return out
+
+
+def finished_late(case: dict[str, Any]) -> list[dict[str, Any]]:
+    """Tasks that were done after their date (the notice went out in time but the institution answered late, or it was only closed later).
+    Order-by dates (certified copies) are not counted: the delivery follows the order by mail."""
+    return [t for t in case["tasks"] if t["deadline"] and t["status"] == "done" and t.get("done_on", "") > t["deadline"] and t["channel"] not in ORDER_BY_CHANNELS]
+
+
+def deadline_summary(case: dict[str, Any]) -> dict[str, Any]:
+    """The honest count: what went by untouched, split by kind, and what finished after its date because someone else was slow."""
+    missed = missed_deadlines(case)
+    late = finished_late(case)
+    return {"missed": [t["id"] for t in missed], "statutory_missed": sum(1 for t in missed if t["deadline_kind"] == "statutory"),
+            "soft_missed": sum(1 for t in missed if t["deadline_kind"] != "statutory"),
+            "finished_late": [{"id": t["id"], "label": t["label"], "deadline": t["deadline"], "done_on": t["done_on"], "days_late": (date.fromisoformat(t["done_on"]) - date.fromisoformat(t["deadline"])).days,
+                               "kind": t["deadline_kind"]} for t in late]}
