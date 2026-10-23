@@ -8,6 +8,7 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 const icon = (id) => `<svg class="icon" aria-hidden="true"><use href="#${id}"/></svg>`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let orbit = null;
 const state = { caseId: new URLSearchParams(location.search).get("case"), lastDecision: null, muted: false, rpc: 0, init: false, view: "echo", story: [], deskIndex: 0, snapshot: null, voice: Promise.resolve(), sayToken: 0, playing: false, prevStatus: {}, filter: "all", day: null };
 const TELL = "My husband died last week. There is a will. He had a bank account, a pension, life insurance, the power bill, a gym and a car.";
 const GATE_WORD = { D0: "your say-so to start", D1: "money leaves the estate", D2: "an original leaves your hands", D3: "your signature or a visit", D4: "cannot be undone", D5: "an heir objects" };
@@ -53,7 +54,7 @@ function device(s) {
   $("device").dataset.state = s;
   const gate = state.snapshot?.due.decisions.length ? "gate" : "idle";
   const v = s === "idle" ? gate : s;
-  $("scene").dataset.state = v; document.body.dataset.state = v;
+  $("scene").dataset.state = v; document.body.dataset.state = v; orbit?.ambient(v);
 }
 // Speaks the reply and lights each word as it is spoken (boundary events when the voice gives them, a timer otherwise).
 // Returns a promise that resolves when the voice is done, which the story waits on.
@@ -125,8 +126,8 @@ function renderCard(out) {
   let h = `<h1>${esc(c.title)}</h1>`;
   if (c.kind === "ledger") {
     h += `<p class="sub">${esc(c.state)} · ${c.originals_needed} certified copies needed, ${c.originals_on_hand} on hand</p>`;
-    h += c.rows.filter((r) => r.status !== "done").slice(0, 5).map((r) => row(esc(r.title) + lab(r), days(r.days_left))).join("");
-    if (c.rows.length > 5) h += `<p class="fine">and ${c.rows.length - 5} more on the wall below.</p>`;
+    h += c.rows.filter((r) => r.status !== "done").slice(0, 3).map((r) => row(esc(r.title) + lab(r), days(r.days_left))).join("");
+    if (c.rows.length > 3) h += `<p class="fine">and ${c.rows.length - 3} more around the room.</p>`;
     if (c.action?.decision_id) h += `<button type="button" class="act" data-tool="approve" data-arg='${esc(JSON.stringify({ case_id: out.case_id, decision_id: c.action.decision_id }))}'>${icon("i-check")} ${esc(c.action.label)}</button><button type="button" class="act alt" data-tool="decline" data-arg='${esc(JSON.stringify({ case_id: out.case_id, decision_id: c.action.decision_id }))}'>Not now</button>`;
   } else if (c.kind === "due") {
     h += c.decisions.slice(0, 2).map((d) => `<div class="row"><span><span class="gate">${icon("i-diamond")}${esc(d.gate)}</span>${esc(d.summary)}</span></div>`).join("");
@@ -193,18 +194,19 @@ async function submitText(text, typed = false) {
 }
 $("ask").addEventListener("submit", async (e) => { e.preventDefault(); const text = $("utterance").value.trim(); if (!text) return; $("utterance").value = ""; try { await submitText(text); } catch {} });
 document.addEventListener("click", (e) => { const b = e.target.closest("button[data-say]"); if (b) { $("utterance").value = b.dataset.say; $("ask").requestSubmit(); } });
-$("say-yourself").addEventListener("click", () => { $("utterance").focus(); $("utterance").scrollIntoView({ block: "center", behavior: "smooth" }); });
+
 
 // ---------- the story: six chapters against the real server, then it hands the gate to you ----------
 function chapter(id) {
+  if (!$("chapters")) return;
   const items = [...$("chapters").children]; let seen = false;
   for (const li of items) { const on = li.dataset.ch === id; li.classList.toggle("on", on); li.classList.toggle("done", !on && !seen); if (on) seen = true; }
   $("scene").dataset.chapter = id || "";
 }
-function setPlay(on) { const b = $("play"); b.querySelector("b").textContent = on ? "Stop the story" : "Watch the first week"; b.querySelector("small").textContent = on ? "Live against the server; nothing is scripted" : "About a minute, live against the server"; }
+function setPlay(on) { const b = $("play"); b.querySelector("b").textContent = on ? "Stop the story" : "Watch the first week"; b.querySelector("small").textContent = on ? "Nothing is scripted" : "Live against the server"; }
 async function playStory() {
   if (state.playing) { state.playing = false; speechSynthesis?.cancel(); return; }
-  state.playing = true; $("scene").classList.add("playing"); setPlay(true); $("handoff").hidden = true;
+  state.playing = true; $("scene").classList.add("playing"); $("scene").classList.remove("handing"); setPlay(true); $("handoff").hidden = true;
   state.caseId = null; state.lastDecision = null; state.snapshot = null; state.prevStatus = {}; state.story = [];
   history.replaceState(null, "", location.pathname + location.hash);
   const check = () => { if (!state.playing) throw new Error("stopped"); };
@@ -215,8 +217,7 @@ async function playStory() {
     chapter("allow"); await submitText("Yes, go ahead.", true); check(); await state.voice; check(); await sleep(500);
     chapter("order"); const q = await submitText("Order the certificates.", true); check(); await state.voice; check();
     if (q?.card?.session_id) { $("alexa-confirm").hidden = false; await sleep(2300); $("alexa-confirm").hidden = true; check(); await completeCheckout(q.card.session_id); await state.voice; check(); }
-    chapter("week"); $("daybar").scrollIntoView({ block: "start", behavior: "smooth" }); await sleep(900); await advance(7); check(); await sleep(1800); check();
-    window.scrollTo({ top: 0, behavior: "smooth" }); await state.voice; check();
+    chapter("week"); await sleep(600); await advance(7); check(); await sleep(1600); check(); await state.voice; check();
     chapter("gate"); await handoff();
   } catch (e) { if (e.message !== "stopped") toast(e.message); chapter(""); }
   finally { state.playing = false; $("scene").classList.remove("playing"); setPlay(false); $("alexa-confirm").hidden = true; }
@@ -225,13 +226,13 @@ $("play").addEventListener("click", playStory);
 async function handoff() {
   await refresh();
   const d = state.snapshot?.due.decisions[0]; const box = $("handoff"); if (!d) { box.hidden = true; return; }
+  $("scene").classList.add("handing");
   state.lastDecision = d.id;
   box.innerHTML = `<span class="k">${icon("i-diamond")} ${esc(d.gate)} · ${esc(GATE_WORD[d.gate] || "")}</span><h3>This one is yours.</h3><p>${esc(d.summary)} The desk stopped here and will not move until you do.</p><div id="handoff-slot"></div><div class="desk-actions"><button type="button" id="handoff-desk">Check it on the Desk first ${icon("i-chev")}</button><button type="button" id="handoff-skip">Leave it for now</button></div>`;
   box.hidden = false;
-  $("handoff-slot").appendChild(holdButton({ label: `Approve: ${d.summary.split(".")[0].slice(0, 48)}`, onHold: async () => { await call("approve", { case_id: state.caseId, decision_id: d.id }); box.innerHTML = `<span class="k">${icon("i-check")} Written down</span><p>Carried out and receipted. The rest of the week's gates are on the Desk.</p><div class="desk-actions"><button type="button" id="handoff-desk" class="primary">Open the Desk ${icon("i-chev")}</button></div>`; $("handoff-desk").addEventListener("click", () => go("desk")); }, onTap: () => go("desk") }));
+  $("handoff-slot").appendChild(holdButton({ label: `Approve: ${d.summary.split(".")[0].slice(0, 48)}`, onHold: async () => { await call("approve", { case_id: state.caseId, decision_id: d.id }); box.innerHTML = `<span class="k">${icon("i-check")} Written down</span><p>Carried out and receipted. The rest of the week's gates are on the Desk.</p><div class="desk-actions"><button type="button" id="handoff-desk" class="primary">Open the Desk ${icon("i-chev")}</button></div>`; $("handoff-desk").addEventListener("click", () => go("desk")); setTimeout(() => { box.hidden = true; $("scene").classList.remove("handing"); }, 5000); }, onTap: () => go("desk") }));
   $("handoff-desk").addEventListener("click", () => go("desk"));
-  $("handoff-skip").addEventListener("click", () => (box.hidden = true));
-  box.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  $("handoff-skip").addEventListener("click", () => { box.hidden = true; $("scene").classList.remove("handing"); });
 }
 
 // ---------- snapshot: the wall, the clock, the day row, the desk count ----------
@@ -253,6 +254,8 @@ async function refresh() {
   const word = { done: "done", waiting: "waiting", parked: "needs you", held: "held", open: "open" };
   $("ledger").innerHTML = rows.map((x, i) => { const ic = { done: "i-check", waiting: "i-half", parked: "i-diamond", held: "i-hand" }[x.status] || "i-open"; const changed = state.prevStatus[x.id] && state.prevStatus[x.id] !== x.status; const dl = x.deadline ? `<span class="dl ${x.days_left < 0 && x.status !== "done" ? "late" : ""} ${x.deadline_kind === "statutory" ? "stat" : ""}" title="${x.deadline_kind} date">${x.status === "done" ? "" : x.days_left == null ? "" : x.days_left < 0 ? `${-x.days_left} d late` : `${x.days_left} d left`}</span>` : `<span class="dl"></span>`;
     return `<li class="${esc(x.status)} ${first ? "new" : ""} ${changed ? "changed" : ""}" style="--i:${i}" title="${esc(x.status)}"><span class="st">${icon(ic)}${word[x.status] || esc(x.status)}</span><span><span class="t">${esc(x.title)}</span>${x.label ? `<span class="lab"> · ${esc(x.label)}</span>` : ""}</span>${dl}</li>`; }).join("");
+  // the ring: nodes follow the ledger; a pulse runs out when a notice goes and back when a reply lands
+  if (orbit) { orbit.setNodes(rows.length ? rows : GHOSTS); let k = 0; for (const x of rows) { const was = state.prevStatus[x.id]; if (!was || was === x.status) continue; const out = was === "open", back = x.status === "parked" || x.status === "done" || x.status === "held"; if (out) setTimeout(() => orbit.pulse(x.id, "out"), k++ * 140); if (back && was !== "open") setTimeout(() => orbit.pulse(x.id, "in"), k++ * 140); } }
   state.prevStatus = Object.fromEntries(rows.map((x) => [x.id, x.status]));
   const n = c.due.decisions.length; $("desk-count").hidden = !n; $("desk-count").textContent = n;
   if ($("device").dataset.state === "idle") device("idle");
@@ -311,16 +314,18 @@ async function renderDesk() {
   $("desk-queue").querySelectorAll("button[data-i]").forEach((b) => b.addEventListener("click", () => { state.deskIndex = Number(b.dataset.i); renderDesk(); }));
   const det = await (await fetch(`/api/cases/${state.caseId}/decisions/${d.id}`)).json();
   const t = det.task;
+  const amount = (det.decision.detail.match(/\$[\d,]+\.?\d*/) || [])[0];
   body.innerHTML = `<div class="stamp"><b>${esc(d.gate)}</b>${esc(GATE_SHORT[d.gate] || "")}</div><div class="meta"><span>${esc(t.id)}${t.label ? " · " + esc(t.label) : ""}</span><span>raised ${esc(det.decision.raised_on)}</span></div>
     <h1>${esc(d.summary)}</h1><p class="gate">${icon("i-diamond")} ${esc(d.gate)} · ${esc(GATE_WORD[d.gate] || "")}</p>
-    <div class="check"><h4>Check before you approve</h4><table><tr><td>Task</td><td>${esc(t.title)}</td></tr>
-      <tr><td>Needs</td><td>${esc(det.decision.detail)}</td></tr>
-      <tr><td>Date</td><td>${t.deadline ? `${esc(t.deadline)} · ${t.days_left < 0 ? `<span class="needs">${-t.days_left} d late</span>` : `${t.days_left} d left`} · ${esc(t.deadline_kind)}` : "none"}</td></tr>
-      ${t.needs_original ? `<tr><td>Originals</td><td>${det.originals_on_hand} certified cop${det.originals_on_hand === 1 ? "y" : "ies"} on hand</td></tr>` : ""}
-      <tr><td>Rule</td><td>${esc(t.source.quote).slice(0, 160)}${t.source.quote.length > 160 ? "…" : ""} <a href="${esc(t.source.url)}" target="_blank" rel="noopener">source ${icon("i-chev")}</a>${t.legal ? `<div class="fine">The court's own rule, not legal advice.</div>` : ""}</td></tr>
-      ${t.history.length ? `<tr><td>Lately</td><td>${t.history.map((x) => `${esc(x.day)} · ${esc(x.text)}`).join("<br>")}</td></tr>` : ""}</table></div>
-    <h4 class="text-h">Text to approve</h4><div class="approve-text"><div class="by">Written by ${esc(det.written_by)} · ${det.text_lines} line${det.text_lines === 1 ? "" : "s"}</div>${esc(det.text)}</div>
-    <div id="hold-slot"></div><p class="hold-hint">Hold to approve, or tap to confirm. Keys: <kbd>A</kbd> confirm.</p>
+    <div class="facts3">
+      <div><span>${amount ? "Amount" : "Channel"}</span><b class="${amount ? "needs" : ""}">${esc(amount || t.channel || "mail")}</b><small>${amount ? "leaves the estate" : "how it goes out"}</small></div>
+      <div><span>Date</span><b class="${t.days_left < 0 ? "needs" : ""}">${t.deadline ? (t.days_left < 0 ? `${-t.days_left} d late` : `${t.days_left} d`) : "none"}</b><small>${t.deadline ? `${esc(t.deadline)} · ${esc(t.deadline_kind)}` : "no date"}</small></div>
+      <div><span>${t.needs_original ? "Originals on hand" : "Written by"}</span><b>${t.needs_original ? det.originals_on_hand : esc(det.written_by)}</b><small>${t.needs_original ? "certified copies" : `${det.text_lines} line${det.text_lines === 1 ? "" : "s"} to approve`}</small></div>
+    </div>
+    <p class="needs-line">${esc(det.decision.detail)}</p>
+    <details class="more"><summary>The rule it follows${t.history.length ? " and what happened lately" : ""}</summary><div><p class="small">${esc(t.source.quote).slice(0, 220)}${t.source.quote.length > 220 ? "…" : ""} <a href="${esc(t.source.url)}" target="_blank" rel="noopener">source ${icon("i-chev")}</a>${t.legal ? `<span class="fine"> · The court's own rule, not legal advice.</span>` : ""}</p>${t.history.length ? `<p class="small muted">${t.history.map((x) => `${esc(x.day)} · ${esc(x.text)}`).join("<br>")}</p>` : ""}</div></details>
+    <details class="more" open><summary>Text to approve</summary><div class="approve-text"><div class="by">Written by ${esc(det.written_by)} · ${det.text_lines} line${det.text_lines === 1 ? "" : "s"}</div>${esc(det.text)}</div></details>
+    <div id="hold-slot"></div><p class="hold-hint">Hold to approve, or tap to confirm. Check before you approve: the facts above, the text below.</p>
     <div class="desk-actions"><button type="button" id="desk-decline">Decline…</button><button type="button" id="desk-echo">Back to the Echo</button></div><div id="desk-extra"></div>`;
   $("hold-slot").appendChild(holdButton({ label: `Approve: ${d.gate === "D0" ? "send routine notices" : t.title.split(" (")[0].slice(0, 40)}`, onHold: () => decide("approve", d.id), onTap: () => confirmStep(d.id, t) }));
   $("desk-decline").addEventListener("click", () => declineStep(d.id));
@@ -399,6 +404,12 @@ $("run-sim").addEventListener("click", async () => {
   const r = await fetch("/api/scoreboard"); const sb = await r.json();
   const key = new Set(["interruption precision", "decision recall", "forbidden actions", "chain verified", "voice policy violations"]);
   $("score").innerHTML = `<tbody>${sb.rows.map((x, i) => `<tr style="--i:${i}" class="${key.has(x.key) ? "key" : ""} ${!sb.ok && key.has(x.key) ? "bad" : ""}"><td>${esc(x.key)}</td><td>${esc(x.value)}</td></tr>`).join("")}</tbody>`;
+  const v = Object.fromEntries(sb.rows.map((x) => [x.key, x.value])); const ours = Number(v["interruptions raised"]), base = Number(v["confirm everything baseline"]), max = Math.max(ours, base, 1);
+  const gauge = (p, label, text) => `<div class="gauge"><svg viewBox="0 0 84 84"><circle class="bg" cx="42" cy="42" r="36"/><circle class="fg" cx="42" cy="42" r="36" style="--p:0"/></svg><b>${esc(text)}</b><span>${esc(label)}</span></div>`;
+  $("chart").hidden = false;
+  $("chart").innerHTML = `<div class="bars"><div class="bar ours"><span>This desk asked</span><i style="--w:0"></i><b>${ours}</b></div><div class="bar"><span>Confirm-everything would</span><i style="--w:0"></i><b>${base}</b></div><div class="bar ours"><span>Tasks done</span><i style="--w:0"></i><b>${esc(v["tasks done"])}</b></div><div class="bar"><span>Forbidden actions</span><i style="--w:0"></i><b>${esc(v["forbidden actions"])}</b></div></div>
+    <div class="gauges">${gauge(Number(v["interruption precision"]), "precision", v["interruption precision"])}${gauge(Number(v["decision recall"]), "recall", v["decision recall"])}${gauge(v["chain verified"] === "True" ? 1 : 0, `${esc(v["receipts"])} receipts`, v["chain verified"] === "True" ? "chain ✓" : "chain ✗")}</div>`;
+  requestAnimationFrame(() => requestAnimationFrame(() => { const bars = $("chart").querySelectorAll(".bar i"); bars[0].style.setProperty("--w", ours / max); bars[1].style.setProperty("--w", base / max); bars[2].style.setProperty("--w", 1); bars[3].style.setProperty("--w", 0.01); $("chart").querySelectorAll(".gauge .fg").forEach((c, i) => c.style.setProperty("--p", [Number(v["interruption precision"]), Number(v["decision recall"]), v["chain verified"] === "True" ? 1 : 0][i])); }));
   $("run-sim").disabled = false; $("run-sim").textContent = sb.ok ? "Ran clean. Run it again" : "A check failed. Run it again";
 });
 function countStats() {
@@ -441,5 +452,7 @@ let toastTimer; function toast(msg) { const t = $("toast"); t.textContent = msg;
 // ---------- boot: the device powers on, then the page waits for you ----------
 odometer(0);
 go(location.hash.slice(1) || "echo");
+if (!reduced) import("/orbit3d.js").then(({ mountOrbit }) => mountOrbit($("scene"))).then((o) => { orbit = o; if (!orbit) return; if (state.snapshot) { orbit.setNodes(state.snapshot.ledger.rows); device($("device").dataset.state); } else orbit.setNodes(GHOSTS); }).catch(() => {});
+const GHOSTS = ["ssa_report", "will_deliver", "certificates_order", "bureau_equifax", "bank_notify", "pension_notify", "insurance_claim", "utilities_notify", "subscription_cancel", "vehicle_reg5"].map((id) => ({ id: "ghost_" + id, status: "ghost", label: null }));
 setTimeout(() => $("scene").classList.add("boot"), 200); setTimeout(() => $("scene").classList.remove("boot"), 1600);
 ensureInit().then(() => { if (state.caseId) call("whats_due", { case_id: state.caseId }); }).catch(() => {});
