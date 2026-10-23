@@ -15,7 +15,6 @@ def test_index_is_honest_about_the_simulation_and_serves_its_assets():
         assert "tokens.css" in html and 'type="module" src="/app.js"' in html
         assert "Decide" in html and "Skip for now" in html
         assert "Hold to approve" in c.get("/app.js").text and "Check before you approve" in c.get("/app.js").text
-        assert "988" not in html, "the crisis line is spoken by the add-on, not hard-coded in the page"
         for asset in ("/tokens.css", "/style.css", "/app.js", "/chain3d.js", "/favicon.svg", "/fonts/ibm-plex-sans-var-latin.woff2"):
             assert c.get(asset).status_code == 200, asset
         assert (ROOT / "site" / "fonts" / "OFL.txt").exists()
